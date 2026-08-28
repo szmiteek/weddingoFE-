@@ -1,0 +1,20 @@
+# Nazwa domeny wchodzi ze zmiennej srodowiskowej DOMAIN.
+# Caddy sam wystawia i odnawia certyfikat Let's Encrypt dla tej nazwy.
+{$DOMAIN} {
+    encode gzip zstd
+    root * /srv
+
+    # Wszystko pod /event-api i /api obsluguje backend.
+    # "api" to nazwa uslugi z docker-compose.yml - Docker rozwiazuje ja na adres kontenera.
+    @api path /event-api/* /api/*
+    handle @api {
+        reverse_proxy api:8080
+    }
+
+    # Reszta to pliki Angulara. try_files jest konieczne, bo sciezki w rodzaju
+    # /offers/24 nie istnieja na dysku - routingiem zajmuje sie przegladarka.
+    handle {
+        try_files {path} /index.html
+        file_server
+    }
+}
