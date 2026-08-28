@@ -1,0 +1,302 @@
+<div class="page">
+  @if (loading()) {
+    <div class="loader"><div class="spinner"></div></div>
+  } @else if (offer(); as offer) {
+    <div class="page-header">
+      <div>
+        <a routerLink="/offers" class="text-muted" style="font-size:.82rem; text-decoration:none;">← Wróć do listy ofert</a>
+        <h1 style="margin-top:.4rem">{{ offer.personalData }}</h1>
+        <div style="margin-top:.5rem">
+          <app-status-badge [status]="offer.status" />
+        </div>
+      </div>
+      <div class="page-actions">
+        <div class="dropdown">
+          <button type="button" class="btn btn-secondary" (click)="toggleActionsMenu()">
+            Akcje
+            <span class="material-symbols-outlined">expand_more</span>
+          </button>
+          @if (actionsMenuOpen()) {
+            <div class="dropdown__backdrop" (click)="closeActionsMenu()"></div>
+            <div class="dropdown__menu">
+              <button type="button" class="dropdown__item" (click)="openPdfModal()">
+                <span class="material-symbols-outlined">picture_as_pdf</span>
+                Przygotuj ofertę PDF
+              </button>
+              @if (offer.pdfGeneratedDate) {
+                <button type="button" class="dropdown__item" (click)="downloadSavedPdf()">
+                  <span class="material-symbols-outlined">download</span>
+                  Pobierz zapisany PDF
+                </button>
+              }
+              @if ((offer.status === 'READY' || offer.status === 'SENT') && offer.pdfGeneratedDate) {
+                <button type="button" class="dropdown__item" (click)="openSendModal()">
+                  <span class="material-symbols-outlined">{{ offer.status === 'SENT' ? 'forward_to_inbox' : 'send' }}</span>
+                  {{ offer.status === 'SENT' ? 'Wyślij ponownie' : 'Wyślij ofertę mailem' }}
+                </button>
+              }
+              @if (offer.status === 'NOT_READY' || offer.status === 'READY') {
+                <button type="button" class="dropdown__item" (click)="markSent()">
+                  <span class="material-symbols-outlined">mark_email_read</span>
+                  Oznacz jako wysłaną
+                </button>
+              }
+              @if (offer.status !== 'SIGNED') {
+                <button type="button" class="dropdown__item" (click)="markSigned()">
+                  <span class="material-symbols-outlined">task_alt</span>
+                  Oznacz jako podpisaną
+                </button>
+              }
+              @if (offer.status !== 'SIGNED') {
+                <div class="dropdown__divider"></div>
+                <button type="button" class="dropdown__item dropdown__item--danger" (click)="remove()">
+                  <span class="material-symbols-outlined">delete</span>
+                  Usuń ofertę
+                </button>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    @if (offer.status === 'SIGNED') {
+      <div class="card" style="margin-bottom: 1.5rem; border-left: 4px solid var(--color-success);">
+        <div class="card__body" style="display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap;">
+          <p>Ta oferta została podpisana i przekształcona w event. Edycja jest zablokowana.</p>
+          @if (linkedEventId(); as eventId) {
+            <a class="btn btn-outline btn-sm" [routerLink]="['/events', eventId]">Przejdź do eventu</a>
+          }
+        </div>
+      </div>
+    }
+
+    <div class="card">
+      <div class="card__header">
+        <h2>Szczegóły oferty</h2>
+      </div>
+
+      <div class="card__body">
+        <div class="form-grid">
+          <div class="field">
+            <label class="field__label">Dane klienta</label>
+            <div>{{ offer.personalData }}</div>
+          </div>
+          <div class="field">
+            <label class="field__label">Miejsce</label>
+            <div>{{ offer.venue }}</div>
+          </div>
+          <div class="field">
+            <label class="field__label">Data eventu</label>
+            <div class="mono">{{ offer.eventDate }}</div>
+          </div>
+          <div class="field">
+            <label class="field__label">E-mail</label>
+            <div>{{ offer.email }}</div>
+          </div>
+          <div class="field">
+            <label class="field__label">Telefon</label>
+            <div>{{ offer.phone }}</div>
+          </div>
+          <div class="field">
+            <label class="field__label">Budżet (zł)</label>
+            <div class="mono">{{ offer.budget | number: '1.0-0' }} zł</div>
+          </div>
+          <div class="field">
+            <label class="field__label">Liczba gości</label>
+            <div class="mono">{{ offer.guests }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top: 1.5rem;">
+      <div class="card__header">
+        <h2>Detale wydarzenia</h2>
+      </div>
+
+      <div class="card__body">
+        <div class="field">
+          <label class="field__label">Rodzaj wydarzenia</label>
+          <app-multiselect-display [options]="eventTypeOptions" [selected]="offer.eventType ?? []" />
+        </div>
+
+        <div class="field">
+          <label class="field__label">Typ stołu prezydialnego</label>
+          <app-singleselect-display [options]="tableTypeOptions" [value]="offer.mainTableType" />
+        </div>
+
+        <div class="field">
+          <label class="field__label">Przy stole prezydialnym będziemy siedzieć</label>
+          <app-singleselect-display [options]="mainTableSeatsOptions" [value]="offer.mainTableSeats" />
+        </div>
+
+        <div class="field">
+          <label class="field__label">Typ stołów gości</label>
+          <app-singleselect-display [options]="tableTypeOptions" [value]="offer.guestsTableType" />
+        </div>
+
+        <div class="field">
+          <label class="field__label">Rodzaj kwiatów</label>
+          <app-singleselect-display [options]="flowersTypeOptions" [value]="offer.flowersType" otherLabel="Inne" />
+        </div>
+
+        <div class="field">
+          <label class="field__label">Rodzaj kompozycji</label>
+          <app-multiselect-display [options]="decorationTypeOptions" [selected]="offer.decorationType ?? []" />
+        </div>
+
+        <div class="section-divider"></div>
+
+        <div class="form-grid">
+          <div class="field">
+            <label class="field__label">Kolorystyka</label>
+            <div>{{ offer.colors || '—' }}</div>
+          </div>
+          <div class="field">
+            <label class="field__label">Przekąski na stole</label>
+            <div>{{ offer.appetizersOnTable ? 'Tak' : 'Nie' }}</div>
+          </div>
+        </div>
+
+        <div class="section-divider"></div>
+
+        <div class="field" style="margin-bottom: 0;">
+          <label class="field__label">Opis</label>
+          <div>{{ offer.description || '—' }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top: 1.5rem;">
+      <app-event-elements-table
+        [offerId]="offer.id"
+        [elements]="eventElements()"
+        [readOnly]="offer.status === 'SIGNED'"
+        (changed)="onElementsChanged($event)"
+      />
+    </div>
+
+    <form [formGroup]="decorationForm" (ngSubmit)="saveDecoration()">
+      <div class="card" style="margin-top: 1.5rem;">
+        <div class="card__header">
+          <h2>Opis dekoracji</h2>
+          @if (offer.status !== 'SIGNED') {
+            @if (!decorationEditMode()) {
+              <button type="button" class="btn btn-secondary btn-sm" (click)="startDecorationEdit()">
+                <span class="material-symbols-outlined">edit</span>
+                Edytuj
+              </button>
+            } @else {
+              <div style="display:flex; gap:.5rem;">
+                <button
+                  type="button"
+                  class="btn btn-secondary btn-sm"
+                  (click)="cancelDecorationEdit()"
+                  [disabled]="savingDecoration()"
+                >
+                  Anuluj
+                </button>
+                @if (decorationForm.dirty) {
+                  <button type="submit" class="btn btn-primary btn-sm" [disabled]="savingDecoration()">
+                    {{ savingDecoration() ? 'Zapisywanie…' : 'Zapisz' }}
+                  </button>
+                }
+              </div>
+            }
+          }
+        </div>
+
+        <div class="card__body">
+          <div class="field" style="margin-bottom: 0;">
+            <textarea
+              class="textarea"
+              rows="6"
+              formControlName="decorationDescription"
+              placeholder="Opisz planowaną dekorację — ten tekst trafi na stronę z wyceną w ofercie PDF."
+            ></textarea>
+          </div>
+        </div>
+      </div>
+    </form>
+
+    <form [formGroup]="form" (ngSubmit)="save()">
+      <div class="card" style="margin-top: 1.5rem;">
+        <div class="card__header">
+          <h2>Wycena i komentarz</h2>
+          @if (offer.status !== 'SIGNED') {
+            @if (!priceEditMode()) {
+              <button type="button" class="btn btn-secondary btn-sm" (click)="startPriceEdit()">
+                <span class="material-symbols-outlined">edit</span>
+                Edytuj
+              </button>
+            } @else {
+              <div style="display:flex; gap:.5rem;">
+                <button type="button" class="btn btn-secondary btn-sm" (click)="cancelPriceEdit()" [disabled]="saving()">Anuluj</button>
+                @if (form.dirty) {
+                  <button type="submit" class="btn btn-primary btn-sm" [disabled]="saving()">
+                    {{ saving() ? 'Zapisywanie…' : 'Zapisz' }}
+                  </button>
+                }
+              </div>
+            }
+          }
+        </div>
+
+        <div class="card__body">
+          <div class="field">
+            <label class="field__label">Cena (zł)</label>
+            <input class="input" type="number" step="0.01" formControlName="price" placeholder="np. 4500" />
+            @if (eventElements().length > 0) {
+            }
+          </div>
+
+          <div class="field" style="margin-bottom: 0;">
+            <label class="field__label">Komentarz</label>
+            <textarea class="textarea" formControlName="comment" placeholder="Uwagi wewnętrzne…"></textarea>
+          </div>
+        </div>
+      </div>
+    </form>
+
+    <div class="card" style="margin-top: 1.5rem;">
+      <div class="card__header">
+        <h2>Zdjęcia inspiracji</h2>
+        <button type="button" class="btn btn-secondary btn-sm" (click)="imageInput.click()" [disabled]="uploadingImages()">
+          <span class="material-symbols-outlined">add_photo_alternate</span>
+          {{ uploadingImages() ? 'Wysyłanie…' : 'Dodaj zdjęcia' }}
+        </button>
+        <input
+          #imageInput
+          type="file"
+          accept="image/*"
+          multiple
+          hidden
+          (change)="uploadImages($event)"
+        />
+      </div>
+      <div class="card__body">
+        <app-image-gallery
+          [images]="images()"
+          [deletable]="true"
+          emptyText="Do tej oferty nie dołączono zdjęć inspiracji."
+          (remove)="removeImage($event)"
+        />
+      </div>
+    </div>
+
+    @if (pdfModalOpen()) {
+      <app-pdf-prepare-modal [offer]="offer" (close)="closePdfModal()" (generate)="generatePdf($event)" />
+    }
+
+    @if (sendModalOpen()) {
+      <app-send-offer-modal
+        [email]="offer.email"
+        [sending]="sendingEmail()"
+        [resend]="offer.status === 'SENT'"
+        (close)="closeSendModal()"
+        (send)="sendEmail($event)"
+      />
+    }
+  }
+</div>

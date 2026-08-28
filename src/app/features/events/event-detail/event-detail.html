@@ -1,0 +1,176 @@
+<div class="page">
+  @if (loading()) {
+    <div class="loader"><div class="spinner"></div></div>
+  } @else if (event(); as event) {
+    <div class="page-header">
+      <div>
+        <a routerLink="/events" class="text-muted" style="font-size:.82rem; text-decoration:none;">← Wróć do listy eventów</a>
+        <h1 style="margin-top:.4rem">{{ event.clientPersonalData }}</h1>
+        <p class="page-header__subtitle">{{ event.venue }} · {{ event.date }}</p>
+      </div>
+      <div class="page-actions">
+        <button type="button" class="btn btn-danger" (click)="removeEvent()" [disabled]="deleting()">
+          <span class="material-symbols-outlined">delete</span>
+          {{ deleting() ? 'Usuwanie…' : 'Usuń event' }}
+        </button>
+      </div>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-card__icon">🎟️</div>
+        <div class="stat-card__value">{{ event.guests }}</div>
+        <div class="stat-card__label">Goście</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card__icon">💰</div>
+        <div class="stat-card__value">{{ event.price | number: '1.2-2' }} zł</div>
+        <div class="stat-card__label">Cena eventu</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card__icon">⏱️</div>
+        <div class="stat-card__value">{{ totalHours() | number: '1.0-1' }} h</div>
+        <div class="stat-card__label">Przepracowane godziny</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card__icon">🧾</div>
+        <div class="stat-card__value">{{ totalLaborCost() | number: '1.2-2' }} zł</div>
+        <div class="stat-card__label">Koszt pracy</div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom: 1.5rem;">
+      <div class="card__header">
+        <h2>Dane klienta</h2>
+      </div>
+      <div class="card__body form-grid">
+        <div>
+          <div class="field__label" style="margin-bottom:.25rem">Budżet</div>
+          <div>{{ event.budget }} zł</div>
+        </div>
+        <div>
+          <div class="field__label" style="margin-bottom:.25rem">E-mail</div>
+          <div>{{ event.email }}</div>
+        </div>
+        <div>
+          <div class="field__label" style="margin-bottom:.25rem">Telefon</div>
+          <div>{{ event.phone }}</div>
+        </div>
+        <div>
+          <div class="field__label" style="margin-bottom:.25rem">ID powiązanej oferty</div>
+          <div><a [routerLink]="['/offers', event.offerId]">#{{ event.offerId }}</a></div>
+        </div>
+        @if (event.comment) {
+          <div style="grid-column: 1 / -1;">
+            <div class="field__label" style="margin-bottom:.25rem">Komentarz</div>
+            <div>{{ event.comment }}</div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom: 1.5rem;">
+      <app-event-elements-table
+        [eventId]="event.id"
+        [elements]="eventElements()"
+        (changed)="onElementsChanged($event)"
+      />
+    </div>
+
+    <form [formGroup]="pricingForm" (ngSubmit)="savePricing()">
+      <div class="card" style="margin-bottom: 1.5rem;">
+        <div class="card__header">
+          <h2>Wycena i komentarz</h2>
+          @if (!pricingEditMode()) {
+            <button type="button" class="btn btn-secondary btn-sm" (click)="startPricingEdit()">
+              <span class="material-symbols-outlined">edit</span>
+              Edytuj
+            </button>
+          } @else {
+            <div style="display:flex; gap:.5rem;">
+              <button type="button" class="btn btn-secondary btn-sm" (click)="cancelPricingEdit()" [disabled]="savingPricing()">
+                Anuluj
+              </button>
+              @if (pricingForm.dirty) {
+                <button type="submit" class="btn btn-primary btn-sm" [disabled]="savingPricing()">
+                  {{ savingPricing() ? 'Zapisywanie…' : 'Zapisz' }}
+                </button>
+              }
+            </div>
+          }
+        </div>
+
+        <div class="card__body">
+          <div class="field">
+            <label class="field__label">Cena (zł)</label>
+            <input class="input" type="number" step="0.01" formControlName="price" placeholder="np. 4500" />
+            @if (eventElements().length > 0) {
+              <span class="field__hint">Uwaga: zostanie nadpisana przy kolejnej edycji wycenionych elementów.</span>
+            }
+          </div>
+
+          <div class="field" style="margin-bottom: 0;">
+            <label class="field__label">Komentarz</label>
+            <textarea class="textarea" formControlName="comment" placeholder="Uwagi wewnętrzne…"></textarea>
+          </div>
+        </div>
+      </div>
+    </form>
+
+    <div class="card" style="margin-bottom: 1.5rem;">
+      <div class="card__header">
+        <h2>Zdjęcia inspiracji</h2>
+      </div>
+      <div class="card__body">
+        <app-image-gallery
+          [images]="images()"
+          emptyText="Do oferty, z której powstał ten event, nie dołączono zdjęć inspiracji."
+        />
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card__header">
+        <h2>Godziny pracy</h2>
+        <button type="button" class="btn btn-primary btn-sm" (click)="openAddWork()">+ Dodaj wpis</button>
+      </div>
+      @if (works().length === 0) {
+        <div class="empty-state">
+          <div class="empty-state__icon">🕒</div>
+          <p>Brak zarejestrowanych godzin pracy dla tego eventu.</p>
+        </div>
+      } @else {
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Pracownik</th>
+                <th>Data</th>
+                <th>Godziny</th>
+                <th>Opis</th>
+                <th class="text-right">Akcje</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (work of works(); track work.id) {
+                <tr>
+                  <td>{{ employeeName(work.employeeId) }}</td>
+                  <td class="mono">{{ work.workDate }}</td>
+                  <td class="mono">{{ work.hoursWorked }} h</td>
+                  <td>{{ work.description || '—' }}</td>
+                  <td class="text-right">
+                    <button type="button" class="btn btn-danger btn-sm" (click)="removeWork(work)">Usuń</button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  }
+</div>
+
+@if (modalOpen()) {
+  <app-event-work-modal [employees]="employees()" [saving]="saving()" (close)="closeModal()" (save)="submitWork($event)" />
+}

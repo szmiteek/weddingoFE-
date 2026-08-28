@@ -1,0 +1,388 @@
+import { Component, inject, signal } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
+import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { OfferService } from '../../../core/services/offer.service';
+import { EventService } from '../../../core/services/event.service';
+import { OfferImageService } from '../../../core/services/offer-image.service';
+import { EventElementService } from '../../../core/services/event-element.service';
+import { NotificationService } from '../../../core/services/notification.service';
+import { ConfirmService } from '../../../core/services/confirm.service';
+import { Offer, OfferPdfOverrides } from '../../../core/models/offer.model';
+import { OfferImage } from '../../../core/models/offer-image.model';
+import { EventElement } from '../../../core/models/event-element.model';
+import { StatusBadge } from '../../../shared/components/status-badge/status-badge';
+import { ImageGallery } from '../../../shared/components/image-gallery/image-gallery';
+import { MultiselectDisplay } from '../../../shared/components/multiselect-display/multiselect-display';
+import { SingleselectDisplay } from '../../../shared/components/singleselect-display/singleselect-display';
+import { PdfPrepareModal } from './pdf-prepare-modal/pdf-prepare-modal';
+import { SendOfferModal } from './send-offer-modal/send-offer-modal';
+import { EventElementsTable } from './event-elements-table/event-elements-table';
+
+@Component({
+  selector: 'app-offer-detail',
+  imports: [
+    ReactiveFormsModule,
+    RouterLink,
+    StatusBadge,
+    ImageGallery,
+    MultiselectDisplay,
+    SingleselectDisplay,
+    DecimalPipe,
+    PdfPrepareModal,
+    SendOfferModal,
+    EventElementsTable,
+  ],
+  templateUrl: './offer-detail.html',
+  styleUrl: './offer-detail.scss',
+})
+export class OfferDetail {
+  protected readonly eventTypeOptions = [
+    'Dekoracja sali weselnej',
+    'Dekoracja plenerowego miejsca zaślubin',
+    'Bukiet Panny Młodej, Świadkowej, butonierki',
+    'Dekoracja urodzin',
+  ];
+
+  protected readonly decorationTypeOptions = ['Kompozycje niskie', 'Kompozycje wysokie', 'Kompozycje mieszane'];
+
+  protected readonly tableTypeOptions = ['Prostokątny', 'Okrągły'];
+
+  protected readonly mainTableSeatsOptions = ['Sami', 'ze Świadkami'];
+
+  protected readonly flowersTypeOptions = ['Naturalne', 'Sztuczne', 'Mieszane (naturalne i sztuczne)'];
+
+  private fb = inject(FormBuilder);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private offerService = inject(OfferService);
+  private eventService = inject(EventService);
+  private offerImageService = inject(OfferImageService);
+  private eventElementService = inject(EventElementService);
+  private notifications = inject(NotificationService);
+  private confirm = inject(ConfirmService);
+
+  protected offer = signal<Offer | null>(null);
+  protected images = signal<OfferImage[]>([]);
+  protected eventElements = signal<EventElement[]>([]);
+  protected loading = signal(true);
+  protected saving = signal(false);
+  protected linkedEventId = signal<number | null>(null);
+  protected pdfModalOpen = signal(false);
+  protected priceEditMode = signal(false);
+  protected decorationEditMode = signal(false);
+  protected savingDecoration = signal(false);
+  protected actionsMenuOpen = signal(false);
+  protected sendingEmail = signal(false);
+  protected sendModalOpen = signal(false);
+  protected uploadingImages = signal(false);
+
+  protected form = this.fb.nonNullable.group({
+    price: this.fb.control<number | null>(null),
+    comment: [''],
+  });
+
+  protected decorationForm = this.fb.nonNullable.group({
+    decorationDescription: [''],
+  });
+
+  ngOnInit(): void {
+    const id = Number(this.route.snapshot.paramMap.get('id'));
+    this.load(id);
+  }
+
+  private load(id: number): void {
+    this.loading.set(true);
+    this.offerService.getById(id).subscribe((offer) => {
+      this.offer.set(offer);
+      this.form.setValue({
+        price: offer.price,
+        comment: offer.comment ?? '',
+      });
+      this.form.disable();
+      this.priceEditMode.set(false);
+      this.decorationForm.setValue({ decorationDescription: offer.decorationDescription ?? '' });
+      this.decorationForm.disable();
+      this.decorationEditMode.set(false);
+      if (offer.status === 'SIGNED') {
+        this.eventService.findByOfferId(offer.id).subscribe((event) => {
+          this.linkedEventId.set(event?.id ?? null);
+        });
+      }
+      this.loading.set(false);
+    });
+    this.offerImageService.getByOfferId(id).subscribe((images) => this.images.set(images));
+    this.eventElementService.getByOfferId(id).subscribe((elements) => this.eventElements.set(elements));
+  }
+
+  toggleActionsMenu(): void {
+    this.actionsMenuOpen.update((open) => !open);
+  }
+
+  closeActionsMenu(): void {
+    this.actionsMenuOpen.set(false);
+  }
+
+  openPdfModal(): void {
+    this.closeActionsMenu();
+    this.pdfModalOpen.set(true);
+  }
+
+  downloadSavedPdf(): void {
+    this.closeActionsMenu();
+    const offer = this.offer();
+    if (!offer) {
+      return;
+    }
+    this.offerService
+      .downloadSavedPdf(offer.id)
+      .subscribe((blob) => this.saveBlobAsFile(blob, `oferta-${offer.id}.pdf`));
+  }
+
+  closePdfModal(): void {
+    this.pdfModalOpen.set(false);
+    this.syncAfterPdfModal();
+  }
+
+  generatePdf(overrides: OfferPdfOverrides): void {
+    const offer = this.offer();
+    if (!offer) {
+      return;
+    }
+    this.offerService.generatePdf(offer.id, overrides).subscribe((blob) => {
+      this.openBlobInNewTab(blob);
+      this.closePdfModal();
+    });
+  }
+
+  private openBlobInNewTab(blob: Blob): void {
+    const url = URL.createObjectURL(blob);
+    window.open(url, '_blank');
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  }
+
+  private saveBlobAsFile(blob: Blob, filename: string): void {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  }
+
+  uploadImages(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const files = Array.from(input.files ?? []);
+    input.value = ''; // let the same file be picked again after an error
+    const offer = this.offer();
+    if (!offer || files.length === 0) {
+      return;
+    }
+    this.uploadingImages.set(true);
+    this.offerImageService.upload(offer.id, files).subscribe({
+      next: (saved) => {
+        this.uploadingImages.set(false);
+        this.images.update((list) => [...list, ...saved]);
+        this.notifications.success(saved.length === 1 ? 'Zdjęcie dodane.' : `Dodano ${saved.length} zdjęcia.`);
+      },
+      error: () => this.uploadingImages.set(false),
+    });
+  }
+
+  async removeImage(image: OfferImage): Promise<void> {
+    const confirmed = await this.confirm.ask({
+      title: 'Usuń zdjęcie',
+      message: `Czy na pewno chcesz usunąć zdjęcie „${image.filename}”?`,
+      confirmLabel: 'Usuń',
+      danger: true,
+    });
+    if (!confirmed) {
+      return;
+    }
+    this.offerImageService.delete(image.id).subscribe(() => {
+      this.images.update((list) => list.filter((i) => i.id !== image.id));
+      this.notifications.success('Zdjęcie usunięte.');
+    });
+  }
+
+  /** Elements were saved/deleted directly on this page — apply the fresh list without an extra round trip. */
+  onElementsChanged(elements: EventElement[]): void {
+    this.eventElements.set(elements);
+    const price = elements.reduce((sum, element) => sum + element.quantity * element.unitPrice, 0);
+    this.offer.update((offer) => (offer ? { ...offer, price } : offer));
+    this.form.patchValue({ price });
+  }
+
+  /** The PDF modal edits elements and the decoration description — resync from the server once it closes. */
+  private syncAfterPdfModal(): void {
+    const offer = this.offer();
+    if (!offer) {
+      return;
+    }
+    this.offerService.getById(offer.id).subscribe((updated) => {
+      this.offer.set(updated);
+      this.form.patchValue({ price: updated.price });
+      this.decorationForm.patchValue({ decorationDescription: updated.decorationDescription ?? '' });
+      this.decorationForm.markAsPristine();
+    });
+    this.eventElementService.getByOfferId(offer.id).subscribe((elements) => this.eventElements.set(elements));
+  }
+
+  startDecorationEdit(): void {
+    this.decorationForm.enable();
+    this.decorationEditMode.set(true);
+  }
+
+  cancelDecorationEdit(): void {
+    const offer = this.offer();
+    if (offer) {
+      this.decorationForm.patchValue({ decorationDescription: offer.decorationDescription ?? '' });
+    }
+    this.decorationForm.markAsPristine();
+    this.decorationForm.disable();
+    this.decorationEditMode.set(false);
+  }
+
+  saveDecoration(): void {
+    const offer = this.offer();
+    if (!offer) {
+      return;
+    }
+    this.savingDecoration.set(true);
+    this.offerService
+      .update(offer.id, { decorationDescription: this.decorationForm.getRawValue().decorationDescription })
+      .subscribe({
+        next: (updated) => {
+          this.offer.set(updated);
+          this.decorationForm.markAsPristine();
+          this.decorationForm.disable();
+          this.decorationEditMode.set(false);
+          this.savingDecoration.set(false);
+          this.notifications.success('Opis dekoracji zapisany.');
+        },
+        error: () => this.savingDecoration.set(false),
+      });
+  }
+
+  startPriceEdit(): void {
+    this.form.enable();
+    this.priceEditMode.set(true);
+  }
+
+  cancelPriceEdit(): void {
+    const offer = this.offer();
+    if (offer) {
+      this.form.patchValue({ price: offer.price, comment: offer.comment ?? '' });
+    }
+    this.form.markAsPristine();
+    this.form.disable();
+    this.priceEditMode.set(false);
+  }
+
+  save(): void {
+    const offer = this.offer();
+    if (!offer) {
+      return;
+    }
+    this.saving.set(true);
+    const value = this.form.getRawValue();
+    this.offerService
+      .update(offer.id, {
+        comment: value.comment,
+        price: value.price ?? undefined,
+      })
+      .subscribe({
+        next: (updated) => {
+          this.offer.set(updated);
+          this.form.markAsPristine();
+          this.form.disable();
+          this.priceEditMode.set(false);
+          this.saving.set(false);
+          this.notifications.success('Oferta zaktualizowana.');
+        },
+        error: () => this.saving.set(false),
+      });
+  }
+
+  openSendModal(): void {
+    this.closeActionsMenu();
+    this.sendModalOpen.set(true);
+  }
+
+  closeSendModal(): void {
+    this.sendModalOpen.set(false);
+  }
+
+  sendEmail(email: string): void {
+    const offer = this.offer();
+    if (!offer) {
+      return;
+    }
+    const resend = offer.status === 'SENT';
+    this.sendingEmail.set(true);
+    this.offerService.sendEmail(offer.id, email).subscribe({
+      next: (updated) => {
+        this.sendingEmail.set(false);
+        this.sendModalOpen.set(false);
+        this.offer.set(updated);
+        this.notifications.success(
+          `Oferta została wysłana ${resend ? 'ponownie ' : ''}na adres ${updated.email}.`,
+        );
+      },
+      error: () => this.sendingEmail.set(false),
+    });
+  }
+
+  markSent(): void {
+    this.closeActionsMenu();
+    const offer = this.offer();
+    if (!offer) {
+      return;
+    }
+    this.offerService.updateStatus(offer.id, { status: 'SENT' }).subscribe(() => {
+      this.notifications.success('Oferta oznaczona jako wysłana.');
+      this.load(offer.id);
+    });
+  }
+
+  async markSigned(): Promise<void> {
+    this.closeActionsMenu();
+    const offer = this.offer();
+    if (!offer) {
+      return;
+    }
+    const confirmed = await this.confirm.ask({
+      title: 'Oznacz jako podpisaną',
+      message: 'Oferta zostanie oznaczona jako podpisana i automatycznie zamieni się w event. Tej operacji nie można cofnąć.',
+      confirmLabel: 'Podpisz i utwórz event',
+    });
+    if (!confirmed) {
+      return;
+    }
+    this.offerService.updateStatus(offer.id, { status: 'SIGNED' }).subscribe(() => {
+      this.notifications.success('Oferta podpisana — utworzono nowy event.');
+      this.load(offer.id);
+    });
+  }
+
+  async remove(): Promise<void> {
+    this.closeActionsMenu();
+    const offer = this.offer();
+    if (!offer) {
+      return;
+    }
+    const confirmed = await this.confirm.ask({
+      title: 'Usuń ofertę',
+      message: `Czy na pewno chcesz usunąć ofertę dla „${offer.personalData}”?`,
+      confirmLabel: 'Usuń',
+      danger: true,
+    });
+    if (!confirmed) {
+      return;
+    }
+    this.offerService.delete(offer.id).subscribe(() => {
+      this.notifications.success('Oferta usunięta.');
+      this.router.navigate(['/offers']);
+    });
+  }
+}

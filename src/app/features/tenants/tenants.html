@@ -1,0 +1,94 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <span class="page-header__eyebrow">Panel super admina</span>
+      <h1>Tenanci</h1>
+      <p class="page-header__subtitle">Konta firm korzystających z aplikacji.</p>
+    </div>
+    <div class="page-actions">
+      <button type="button" class="btn btn-primary" (click)="openForm()">+ Dodaj tenanta</button>
+    </div>
+  </div>
+
+  <div class="card">
+    @if (tenants().length === 0) {
+      <div class="empty-state">
+        <div class="empty-state__icon">🏢</div>
+        <p>Brak tenantów. Dodaj pierwszą firmę, żeby mogła się zalogować.</p>
+      </div>
+    } @else {
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Firma</th>
+              <th>E-mail (login)</th>
+              <th>Status</th>
+              <th>Utworzono</th>
+              <th class="text-right">Akcje</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (tenant of tenants(); track tenant.id) {
+              <tr>
+                <td>{{ tenant.companyName }}</td>
+                <td class="mono">{{ tenant.email }}</td>
+                <td>
+                  @if (tenant.active) {
+                    <span class="badge badge--signed">Aktywny</span>
+                  } @else {
+                    <span class="badge badge--not-sent">Nieaktywny</span>
+                  }
+                </td>
+                <td class="mono">{{ tenant.createdDate | date: 'yyyy-MM-dd' }}</td>
+                <td>
+                  <div class="table-actions">
+                    <button type="button" class="btn btn-secondary btn-sm" (click)="toggleActive(tenant)">
+                      {{ tenant.active ? 'Dezaktywuj' : 'Aktywuj' }}
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</div>
+
+@if (formOpen()) {
+  <div class="modal-backdrop" (click)="closeForm()">
+    <div class="modal-panel" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Nowy tenant</h2>
+        <button type="button" class="modal-close" (click)="closeForm()" aria-label="Zamknij">✕</button>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="submit()">
+        <div class="modal-body">
+          <div class="field">
+            <label class="field__label">Nazwa firmy</label>
+            <input class="input" formControlName="companyName" required />
+          </div>
+          <div class="field">
+            <label class="field__label">E-mail (login)</label>
+            <input class="input" type="email" formControlName="email" required />
+          </div>
+          <div class="field" style="margin-bottom: 0;">
+            <label class="field__label">Hasło</label>
+            <input class="input" type="password" formControlName="password" minlength="8" required />
+            <span class="field__hint">Minimum 8 znaków.</span>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="closeForm()">Anuluj</button>
+          <button type="submit" class="btn btn-primary" [disabled]="saving()">
+            {{ saving() ? 'Zapisywanie…' : 'Utwórz tenanta' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

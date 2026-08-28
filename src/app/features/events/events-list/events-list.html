@@ -1,0 +1,110 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <span class="page-header__eyebrow">Eventy</span>
+
+    </div>
+  </div>
+
+  <div class="card filter-card">
+    <div class="card__body">
+      <form class="filter-bar" [formGroup]="filterForm" (ngSubmit)="applyFilters()">
+        <div class="filter-bar__row">
+          <div class="field">
+            <label class="field__label">Data wydarzenia od</label>
+            <input class="input" type="date" formControlName="dateFrom" />
+          </div>
+          <div class="field">
+            <label class="field__label">Data wydarzenia do</label>
+            <input class="input" type="date" formControlName="dateTo" />
+          </div>
+        </div>
+        <div class="filter-bar__row">
+          <div class="field">
+            <label class="field__label">Klient</label>
+            <input class="input" type="text" formControlName="client" placeholder="Imię, nazwisko..." />
+          </div>
+          <div class="field">
+            <label class="field__label">Miejsce</label>
+            <input class="input" type="text" formControlName="venue" placeholder="Nazwa miejsca..." />
+          </div>
+        </div>
+        <div class="filter-bar__actions">
+          <button type="submit" class="btn btn-primary btn-sm">Filtruj</button>
+          <button type="button" class="btn btn-outline btn-sm" (click)="resetFilters()">Wyczyść</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="card">
+    @if (loading()) {
+      <div class="loader"><div class="spinner"></div></div>
+    } @else if (events().length === 0) {
+      <div class="empty-state">
+        <div class="empty-state__icon">🎉</div>
+        <p>Brak eventów. Pojawią się tutaj, gdy oferta zostanie oznaczona jako podpisana.</p>
+      </div>
+    } @else {
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th class="sortable" [class.is-sorted]="sortField() === 'clientPersonalData'" (click)="sortBy('clientPersonalData')">
+                <app-sort-label label="Klient" [active]="sortField() === 'clientPersonalData'" [direction]="sortDir()" />
+              </th>
+              <th class="sortable" [class.is-sorted]="sortField() === 'venue'" (click)="sortBy('venue')">
+                <app-sort-label label="Miejsce" [active]="sortField() === 'venue'" [direction]="sortDir()" />
+              </th>
+              <th class="sortable" [class.is-sorted]="sortField() === 'date'" (click)="sortBy('date')">
+                <app-sort-label label="Data" [active]="sortField() === 'date'" [direction]="sortDir()" />
+              </th>
+              <th class="sortable" [class.is-sorted]="sortField() === 'guests'" (click)="sortBy('guests')">
+                <app-sort-label label="Goście" [active]="sortField() === 'guests'" [direction]="sortDir()" />
+              </th>
+              <th class="sortable" [class.is-sorted]="sortField() === 'price'" (click)="sortBy('price')">
+                <app-sort-label label="Cena" [active]="sortField() === 'price'" [direction]="sortDir()" />
+              </th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (event of events(); track event.id) {
+              <tr class="is-clickable" (click)="goToDetail(event)">
+                <td>
+                  <div>{{ event.clientPersonalData }}</div>
+                  <div class="text-muted" style="font-size:.78rem">{{ event.email }}</div>
+                </td>
+                <td>{{ event.venue }}</td>
+                <td class="mono">{{ event.date }}</td>
+                <td class="mono">{{ event.guests }}</td>
+                <td class="mono">{{ event.price | number: '1.2-2' }} zł</td>
+                <td class="text-right">
+                  <div class="table-actions">
+                    <button type="button" class="btn btn-secondary btn-sm">Szczegóły</button>
+                    <button
+                      type="button"
+                      class="icon-btn"
+                      (click)="remove(event, $event)"
+                      aria-label="Usuń event"
+                      title="Usuń event"
+                    >
+                      <span class="material-symbols-outlined">delete</span>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <app-paginator
+        [currentPage]="currentPage()"
+        [totalPages]="totalPages()"
+        [totalElements]="totalElements()"
+        [pageSize]="15"
+        (pageChange)="load($event)"
+      />
+    }
+  </div>
+</div>

@@ -1,0 +1,121 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <span class="page-header__eyebrow">Oferty</span>
+    </div>
+  </div>
+
+  <div class="card filter-card">
+    <div class="card__body">
+      <form class="filter-bar" [formGroup]="filterForm" (ngSubmit)="applyFilters()">
+        <div class="filter-bar__row">
+          <div class="field">
+            <label class="field__label">Data otrzymania od</label>
+            <input class="input" type="date" formControlName="createdDateFrom" />
+          </div>
+          <div class="field">
+            <label class="field__label">Data otrzymania do</label>
+            <input class="input" type="date" formControlName="createdDateTo" />
+          </div>
+          <div class="field">
+            <label class="field__label">Data eventu od</label>
+            <input class="input" type="date" formControlName="eventDateFrom" />
+          </div>
+          <div class="field">
+            <label class="field__label">Data eventu do</label>
+            <input class="input" type="date" formControlName="eventDateTo" />
+          </div>
+        </div>
+        <div class="filter-bar__row">
+          <div class="field">
+            <label class="field__label">Klient</label>
+            <input class="input" type="text" formControlName="client" placeholder="Imię, nazwisko..." />
+          </div>
+          <div class="field">
+            <label class="field__label">Miejsce</label>
+            <input class="input" type="text" formControlName="venue" placeholder="Nazwa miejsca..." />
+          </div>
+        </div>
+        <div class="filter-bar__actions">
+          <button type="submit" class="btn btn-primary btn-sm">Filtruj</button>
+          <button type="button" class="btn btn-outline btn-sm" (click)="resetFilters()">Wyczyść</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="card">
+    @if (loading()) {
+      <div class="loader"><div class="spinner"></div></div>
+    } @else if (offers().length === 0) {
+      <div class="empty-state">
+        <div class="empty-state__icon">📭</div>
+        <p>Brak ofert do wyświetlenia.</p>
+      </div>
+    } @else {
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th class="sortable" [class.is-sorted]="sortField() === 'createdDate'" (click)="sortBy('createdDate')">
+                <app-sort-label label="Data otrzymania" [active]="sortField() === 'createdDate'" [direction]="sortDir()" />
+              </th>
+              <th class="sortable" [class.is-sorted]="sortField() === 'personalData'" (click)="sortBy('personalData')">
+                <app-sort-label label="Klient" [active]="sortField() === 'personalData'" [direction]="sortDir()" />
+              </th>
+              <th class="sortable" [class.is-sorted]="sortField() === 'venue'" (click)="sortBy('venue')">
+                <app-sort-label label="Miejsce" [active]="sortField() === 'venue'" [direction]="sortDir()" />
+              </th>
+              <th class="sortable" [class.is-sorted]="sortField() === 'eventDate'" (click)="sortBy('eventDate')">
+                <app-sort-label label="Data eventu" [active]="sortField() === 'eventDate'" [direction]="sortDir()" />
+              </th>
+              <th class="sortable" [class.is-sorted]="sortField() === 'budget'" (click)="sortBy('budget')">
+                <app-sort-label label="Budżet" [active]="sortField() === 'budget'" [direction]="sortDir()" />
+              </th>
+              <th class="sortable" [class.is-sorted]="sortField() === 'status'" (click)="sortBy('status')">
+                <app-sort-label label="Status" [active]="sortField() === 'status'" [direction]="sortDir()" />
+              </th>
+              <th class="text-right">Akcje</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (offer of offers(); track offer.id) {
+              <tr class="is-clickable" (click)="goToDetail(offer)">
+                <td class="mono">{{ offer.createdDate }}</td>
+                <td>
+                  <div>{{ offer.personalData }}</div>
+                  <div class="text-muted" style="font-size:.78rem">{{ offer.email }}</div>
+                </td>
+                <td>{{ offer.venue }}</td>
+                <td class="mono">{{ offer.eventDate }}</td>
+                <td class="mono">{{ offer.budget | number: '1.0-0' }} zł</td>
+                <td><app-status-badge [status]="offer.status" /></td>
+                <td>
+                  <div class="table-actions">
+                    @if (offer.status === 'SIGNED') {
+                      <button type="button" class="btn btn-outline btn-sm" (click)="goToEvent(offer, $event)" title="Zobacz powiązany event">
+                        Event →
+                      </button>
+                    }
+                    @if (offer.status !== 'SIGNED') {
+                      <button type="button" class="icon-btn" (click)="remove(offer, $event)" aria-label="Usuń ofertę" title="Usuń ofertę">
+                        <span class="material-symbols-outlined">delete</span>
+                      </button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <app-paginator
+        [currentPage]="currentPage()"
+        [totalPages]="totalPages()"
+        [totalElements]="totalElements()"
+        [pageSize]="15"
+        (pageChange)="load($event)"
+      />
+    }
+  </div>
+</div>

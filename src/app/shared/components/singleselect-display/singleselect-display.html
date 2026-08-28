@@ -1,0 +1,14 @@
+<div class="checklist">
+  @for (opt of options(); track opt) {
+    <label class="checklist__item">
+      <input type="radio" tabindex="-1" (click)="$event.preventDefault()" [checked]="value() === opt" />
+      <span>{{ opt }}</span>
+    </label>
+  }
+  @if (showOther()) {
+    <label class="checklist__item">
+      <input type="radio" tabindex="-1" (click)="$event.preventDefault()" [checked]="isCustom()" />
+      <span>{{ otherLabel() }}@if (isCustom()) {: {{ value() }}}</span>
+    </label>
+  }
+</div>

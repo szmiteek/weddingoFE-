@@ -1,0 +1,23 @@
+.toast__icon {
+  width: 1.4rem;
+  height: 1.4rem;
+  border-radius: 50%;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.toast--success .toast__icon {
+  background: var(--color-success-soft);
+  color: var(--color-success);
+}
+
+.toast--error .toast__icon {
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+}

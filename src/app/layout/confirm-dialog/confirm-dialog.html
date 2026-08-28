@@ -1,0 +1,24 @@
+@if (confirm.state(); as request) {
+  <div class="modal-backdrop" (click)="confirm.resolve(false)">
+    <div class="modal-panel" style="max-width: 26rem" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>{{ request.title }}</h2>
+      </div>
+      <div class="modal-body">
+        <p>{{ request.message }}</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="confirm.resolve(false)">Anuluj</button>
+        <button
+          type="button"
+          class="btn"
+          [class.btn-danger]="request.danger"
+          [class.btn-primary]="!request.danger"
+          (click)="confirm.resolve(true)"
+        >
+          {{ request.confirmLabel ?? 'Potwierdź' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

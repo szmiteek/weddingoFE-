@@ -1,0 +1,52 @@
+<div class="modal-backdrop" (click)="close.emit()">
+  <div class="modal-panel" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Dodaj godziny pracy</h2>
+      <button type="button" class="modal-close" (click)="close.emit()" aria-label="Zamknij">✕</button>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <div class="modal-body">
+        <div class="field">
+          <label class="field__label">Pracownik</label>
+          <select
+            class="select"
+            formControlName="employeeId"
+            [class.is-invalid]="form.controls.employeeId.invalid && form.controls.employeeId.touched"
+          >
+            <option [value]="0" disabled>Wybierz pracownika</option>
+            @for (employee of employees(); track employee.id) {
+              <option [value]="employee.id">{{ employee.firstName }} {{ employee.lastName }}</option>
+            }
+          </select>
+          @if (form.controls.employeeId.invalid && form.controls.employeeId.touched) {
+            <span class="field__error">Wybierz pracownika</span>
+          }
+        </div>
+
+        <div class="form-grid">
+          <div class="field">
+            <label class="field__label">Data pracy</label>
+            <input class="input" type="date" formControlName="workDate" />
+          </div>
+          <div class="field">
+            <label class="field__label">Liczba godzin</label>
+            <input class="input" type="number" step="0.5" min="0.5" formControlName="hoursWorked" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field__label">Opis (opcjonalnie)</label>
+          <textarea class="textarea" formControlName="description" placeholder="np. obsługa baru"></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="close.emit()">Anuluj</button>
+        <button type="submit" class="btn btn-primary" [disabled]="saving()">
+          {{ saving() ? 'Zapisywanie…' : 'Dodaj wpis' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

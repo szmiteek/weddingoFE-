@@ -1,0 +1,62 @@
+<div class="modal-backdrop" (click)="close.emit()">
+  <div class="modal-panel" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ isEdit() ? 'Edytuj pracownika' : 'Nowy pracownik' }}</h2>
+      <button type="button" class="modal-close" (click)="close.emit()" aria-label="Zamknij">✕</button>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="field">
+            <label class="field__label">Imię</label>
+            <input
+              class="input"
+              [class.is-invalid]="form.controls.firstName.invalid && form.controls.firstName.touched"
+              formControlName="firstName"
+              placeholder="Jan"
+            />
+            @if (form.controls.firstName.invalid && form.controls.firstName.touched) {
+              <span class="field__error">Imię jest wymagane</span>
+            }
+          </div>
+
+          <div class="field">
+            <label class="field__label">Nazwisko</label>
+            <input
+              class="input"
+              [class.is-invalid]="form.controls.lastName.invalid && form.controls.lastName.touched"
+              formControlName="lastName"
+              placeholder="Kowalski"
+            />
+            @if (form.controls.lastName.invalid && form.controls.lastName.touched) {
+              <span class="field__error">Nazwisko jest wymagane</span>
+            }
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field__label">Stawka godzinowa (PLN)</label>
+          <input
+            class="input"
+            type="number"
+            step="0.5"
+            min="30"
+            [class.is-invalid]="form.controls.hourlyRate.invalid && form.controls.hourlyRate.touched"
+            formControlName="hourlyRate"
+          />
+          @if (form.controls.hourlyRate.invalid && form.controls.hourlyRate.touched) {
+            <span class="field__error">Minimalna stawka to 30 PLN</span>
+          }
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="close.emit()">Anuluj</button>
+        <button type="submit" class="btn btn-primary" [disabled]="saving()">
+          {{ saving() ? 'Zapisywanie…' : (isEdit() ? 'Zapisz zmiany' : 'Dodaj pracownika') }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

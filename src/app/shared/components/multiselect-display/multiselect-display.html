@@ -1,0 +1,12 @@
+<div class="checklist">
+  @for (opt of options(); track opt) {
+    <label class="checklist__item">
+      <input type="checkbox" tabindex="-1" (click)="$event.preventDefault()" [checked]="selected().includes(opt)" />
+      <span>{{ opt }}</span>
+    </label>
+  }
+  <label class="checklist__item">
+    <input type="checkbox" tabindex="-1" (click)="$event.preventDefault()" [checked]="customValues().length > 0" />
+    <span>Inne@if (customValues().length > 0) {: {{ customValues().join(', ') }}}</span>
+  </label>
+</div>

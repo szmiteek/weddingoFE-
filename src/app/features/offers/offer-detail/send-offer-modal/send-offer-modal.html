@@ -1,0 +1,52 @@
+<div class="modal-backdrop" (click)="close.emit()">
+  <div class="modal-panel" style="max-width: 28rem" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ resend() ? 'Wyślij ofertę ponownie' : 'Wyślij ofertę' }}</h2>
+      <button type="button" class="modal-close" (click)="close.emit()" aria-label="Zamknij">✕</button>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <div class="modal-body">
+        @if (resend()) {
+          <p
+            style="
+              margin-bottom: 1rem;
+              padding: 0.7rem 0.9rem;
+              border-left: 3px solid var(--color-warning);
+              background: var(--color-warning-soft);
+              border-radius: var(--radius-sm);
+              font-size: 0.86rem;
+            "
+          >
+            Ta oferta była już wysłana. Klient otrzyma ją ponownie z aktualnie zapisanym plikiem PDF.
+          </p>
+        }
+
+    
+
+        <div class="field" style="margin-bottom: 0;">
+          <label class="field__label">Adres e-mail klienta</label>
+          <input
+            class="input"
+            type="email"
+            formControlName="email"
+            autocomplete="off"
+            [class.is-invalid]="form.controls.email.invalid && form.controls.email.touched"
+          />
+          @if (form.controls.email.invalid && form.controls.email.touched) {
+            <span class="field__error">Podaj prawidłowy adres e-mail.</span>
+          } @else if (changed) {
+            <span class="field__hint">Poprawiony adres zostanie też zapisany w ofercie.</span>
+          }
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="close.emit()" [disabled]="sending()">Anuluj</button>
+        <button type="submit" class="btn btn-primary" [disabled]="sending() || form.invalid">
+          {{ sending() ? 'Wysyłanie…' : resend() ? 'Wyślij ponownie' : 'Wyślij' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

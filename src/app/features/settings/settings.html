@@ -1,0 +1,186 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <span class="page-header__eyebrow">Twoje konto</span>
+      <h1>Ustawienia</h1>
+      <p class="page-header__subtitle">Zarządzaj swoim kontem.</p>
+    </div>
+  </div>
+
+  <div class="settings-layout">
+    <nav class="settings-nav">
+      <button
+        type="button"
+        class="settings-nav__item"
+        [class.is-active]="activeSection() === 'password'"
+        (click)="activeSection.set('password')"
+      >
+        <span class="material-symbols-outlined">lock</span>
+        Zmiana hasła
+      </button>
+
+      @if (!authService.isSuperAdmin()) {
+        <button
+          type="button"
+          class="settings-nav__item"
+          [class.is-active]="activeSection() === 'form'"
+          (click)="activeSection.set('form')"
+        >
+          <span class="material-symbols-outlined">link</span>
+          Formularz dla klientów
+        </button>
+
+        <button
+          type="button"
+          class="settings-nav__item"
+          [class.is-active]="activeSection() === 'email'"
+          (click)="activeSection.set('email')"
+        >
+          <span class="material-symbols-outlined">mail</span>
+          Ustawienia e-mail
+        </button>
+      }
+    </nav>
+
+    <div class="settings-content">
+      @if (activeSection() === 'password') {
+        <div class="card">
+          <div class="card__header">
+            <h2>Zmiana hasła</h2>
+          </div>
+
+          <form [formGroup]="form" (ngSubmit)="submit()">
+            <div class="card__body">
+              <div class="field">
+                <label class="field__label">Obecne hasło</label>
+                <input class="input" type="password" formControlName="currentPassword" autocomplete="current-password" />
+              </div>
+
+              <div class="field">
+                <label class="field__label">Nowe hasło</label>
+                <input class="input" type="password" formControlName="newPassword" autocomplete="new-password" />
+                <span class="field__hint">Minimum 8 znaków.</span>
+              </div>
+
+              <div class="field" style="margin-bottom: 0;">
+                <label class="field__label">Powtórz nowe hasło</label>
+                <input class="input" type="password" formControlName="confirmPassword" autocomplete="new-password" />
+                @if (mismatch()) {
+                  <span class="field__error">Hasła nie są takie same.</span>
+                }
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <button type="submit" class="btn btn-primary" [disabled]="saving() || form.invalid">
+                {{ saving() ? 'Zapisywanie…' : 'Zmień hasło' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      }
+
+      @if (activeSection() === 'form' && !authService.isSuperAdmin()) {
+        <div class="card">
+          <div class="card__header">
+            <h2>Formularz dla klientów</h2>
+          </div>
+          <div class="card__body">
+            <p class="text-muted" style="margin-bottom: 1rem;">
+              Wklej ten link na swojej stronie lub w social mediach — klienci będą mogli zgłosić zapytanie o ofertę bez
+              zakładania konta. Zgłoszenia trafią prosto do listy ofert.
+            </p>
+            <div class="field">
+              <label class="field__label">Twój link</label>
+              <input class="input mono" [value]="publicFormUrl()" readonly />
+            </div>
+            <div style="display:flex; gap:.6rem; flex-wrap:wrap;">
+              <button type="button" class="btn btn-secondary" (click)="copyLink()">
+                {{ copied() ? 'Skopiowano ✓' : 'Kopiuj link' }}
+              </button>
+              <button type="button" class="btn btn-outline" (click)="regenerateLink()" [disabled]="regenerating()">
+                {{ regenerating() ? 'Generowanie…' : 'Wygeneruj nowy link' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+
+      @if (activeSection() === 'email' && !authService.isSuperAdmin()) {
+        <div class="card" style="margin-bottom: 1.5rem;">
+          <div class="card__header">
+            <h2>Konto do wysyłki</h2>
+          </div>
+
+          <div class="card__body">
+            @if (mailConnection(); as connection) {
+              @if (connection.connected) {
+                <div class="field">
+                  <label class="field__label">Status</label>
+                  <div><span class="badge badge--ready">Połączono</span></div>
+                </div>
+                <div class="field">
+                  <label class="field__label">Konto</label>
+                  <div>{{ connection.email }}</div>
+                </div>
+              } @else if (connection.status === 'REAUTH_REQUIRED') {
+                <div class="field">
+                  <label class="field__label">Status</label>
+                  <div><span class="badge badge--not-ready">Wymagane ponowne połączenie</span></div>
+                </div>
+                <p class="text-muted" style="margin-bottom: 1rem;">
+                  Dostęp do konta {{ connection.email }} wygasł lub został cofnięty. Połącz konto ponownie, żeby dalej
+                  wysyłać oferty.
+                </p>
+              } @else {
+                <p class="text-muted" style="margin-bottom: 1rem;">
+                  Podłącz swoje konto Google, żeby wysyłać oferty do klientów bezpośrednio ze swojej skrzynki. Nie
+                  przechowujemy Twojego hasła — autoryzacja odbywa się po stronie Google.
+                </p>
+              }
+
+              <div style="display:flex; gap:.6rem; flex-wrap:wrap;">
+                @if (connection.connected) {
+                  <button type="button" class="btn btn-secondary" (click)="connectGoogle()" [disabled]="connecting()">
+                    Połącz ponownie
+                  </button>
+                  <button type="button" class="btn btn-outline" (click)="disconnectMail()">Odłącz</button>
+                } @else {
+                  <button type="button" class="btn btn-primary" (click)="connectGoogle()" [disabled]="connecting()">
+                    {{ connecting() ? 'Przekierowywanie…' : 'Połącz z Google' }}
+                  </button>
+                }
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card__header">
+            <h2>Treść wiadomości</h2>
+          </div>
+
+          <form [formGroup]="emailForm" (ngSubmit)="submitEmailSettings()">
+            <div class="card__body">
+              <div class="field" style="margin-bottom: 0;">
+                <label class="field__label">Wiadomość wysyłana razem z ofertą</label>
+                <textarea
+                  class="textarea"
+                  formControlName="emailMessage"
+                  rows="6"
+                  placeholder="Treść maila wysyłanego razem z ofertą…"
+                ></textarea>
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <button type="submit" class="btn btn-primary" [disabled]="savingEmailSettings() || emailForm.invalid">
+                {{ savingEmailSettings() ? 'Zapisywanie…' : 'Zapisz wiadomość' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      }
+    </div>
+  </div>
+</div>

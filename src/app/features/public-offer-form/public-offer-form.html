@@ -1,0 +1,211 @@
+<div class="public-form-page">
+  @if (loading()) {
+    <div class="loader"><div class="spinner"></div></div>
+  } @else if (notFound()) {
+    <div class="card public-form-card">
+      <div class="card__body">
+        <p>Nie znaleziono formularza. Sprawdź, czy link jest poprawny.</p>
+      </div>
+    </div>
+  } @else if (submitted()) {
+    <div class="card public-form-card">
+      <div class="card__body">
+        <h1>Dziękujemy!</h1>
+        <p class="text-muted" style="margin-top: .5rem;">Otrzymaliśmy Twoje zgłoszenie. Skontaktujemy się wkrótce.</p>
+      </div>
+    </div>
+  } @else {
+    <div class="card public-form-card">
+      <div class="card__header">
+        <div>
+          <h1>Zapytanie o ofertę</h1>
+          @if (companyName()) {
+            <p class="text-muted" style="margin-top: .3rem;">{{ companyName() }}</p>
+          }
+        </div>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="submit()">
+        <div class="card__body">
+          <div class="field">
+            <label class="field__label">Imię i nazwisko</label>
+            <input class="input" formControlName="personalData" [class.is-invalid]="form.controls.personalData.invalid && form.controls.personalData.touched" required />
+            @if (form.controls.personalData.invalid && form.controls.personalData.touched) {
+              <span class="field__error">To pole jest wymagane.</span>
+            }
+          </div>
+
+          <div class="form-grid">
+            <div class="field">
+              <label class="field__label">E-mail</label>
+              <input class="input" type="email" formControlName="email" [class.is-invalid]="form.controls.email.invalid && form.controls.email.touched" required />
+              @if (form.controls.email.invalid && form.controls.email.touched) {
+                <span class="field__error">Podaj prawidłowy adres e-mail.</span>
+              }
+            </div>
+            <div class="field">
+              <label class="field__label">Telefon</label>
+              <input class="input" formControlName="phone" [class.is-invalid]="form.controls.phone.invalid && form.controls.phone.touched" required />
+              @if (form.controls.phone.invalid && form.controls.phone.touched) {
+                <span class="field__error">To pole jest wymagane.</span>
+              }
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="field">
+              <label class="field__label">Miejsce</label>
+              <input class="input" formControlName="venue" [class.is-invalid]="form.controls.venue.invalid && form.controls.venue.touched" required />
+              @if (form.controls.venue.invalid && form.controls.venue.touched) {
+                <span class="field__error">To pole jest wymagane.</span>
+              }
+            </div>
+            <div class="field">
+              <label class="field__label">Data eventu</label>
+              <input class="input" type="date" formControlName="eventDate" [class.is-invalid]="form.controls.eventDate.invalid && form.controls.eventDate.touched" required />
+              @if (form.controls.eventDate.invalid && form.controls.eventDate.touched) {
+                <span class="field__error">To pole jest wymagane.</span>
+              }
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="field">
+              <label class="field__label">Orientacyjny budżet (zł)</label>
+              <input class="input" type="number" formControlName="budget" [class.is-invalid]="form.controls.budget.invalid && form.controls.budget.touched" required />
+              @if (form.controls.budget.invalid && form.controls.budget.touched) {
+                <span class="field__error">To pole jest wymagane.</span>
+              }
+            </div>
+            <div class="field">
+              <label class="field__label">Liczba gości</label>
+              <input class="input" type="number" formControlName="guests" [class.is-invalid]="form.controls.guests.invalid && form.controls.guests.touched" required />
+              @if (form.controls.guests.invalid && form.controls.guests.touched) {
+                <span class="field__error">To pole jest wymagane.</span>
+              }
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field__label">Rodzaj wydarzenia</label>
+            <div class="checklist">
+              @for (option of eventTypeOptions; track option) {
+                <label class="checklist__item">
+                  <input type="checkbox" [checked]="selectedEventTypes().includes(option)" (change)="toggleEventType(option)" />
+                  {{ option }}
+                </label>
+              }
+            </div>
+            @if (submitAttempted() && selectedEventTypes().length === 0) {
+              <span class="field__error">Wybierz co najmniej jedną opcję.</span>
+            }
+          </div>
+
+          <div class="field">
+            <label class="field__label">Rodzaj kompozycji</label>
+            <div class="checklist">
+              @for (option of decorationTypeOptions; track option) {
+                <label class="checklist__item">
+                  <input
+                    type="checkbox"
+                    [checked]="selectedDecorationTypes().includes(option)"
+                    (change)="toggleDecorationType(option)"
+                  />
+                  {{ option }}
+                </label>
+              }
+            </div>
+            @if (submitAttempted() && selectedDecorationTypes().length === 0) {
+              <span class="field__error">Wybierz co najmniej jedną opcję.</span>
+            }
+          </div>
+
+          @for (item of singleSelectFields; track item.key) {
+            <div class="field">
+              <label class="field__label">{{ item.label }}</label>
+              <div class="checklist">
+                @for (option of item.options; track option) {
+                  <label class="checklist__item">
+                    <input
+                      type="radio"
+                      [name]="item.key"
+                      [checked]="item.field.selected() === option"
+                      (change)="selectOption(item.field, option)"
+                    />
+                    {{ option }}
+                  </label>
+                }
+                <label class="checklist__item">
+                  <input
+                    type="radio"
+                    [name]="item.key"
+                    [checked]="item.field.selected() === OTHER"
+                    (change)="selectOption(item.field, OTHER)"
+                  />
+                  Inny
+                </label>
+              </div>
+              @if (item.field.selected() === OTHER) {
+                <input
+                  class="input"
+                  style="margin-top: .5rem;"
+                  [value]="item.field.custom()"
+                  (input)="setCustom(item.field, $any($event.target).value)"
+                  placeholder="Podaj jaki"
+                />
+              }
+              @if (isSingleSelectMissing(item)) {
+                <span class="field__error">Wybierz jedną z opcji.</span>
+              }
+            </div>
+          }
+
+          <div class="field">
+            <label class="field__label">Kolorystyka</label>
+            <input class="input" formControlName="colors" [class.is-invalid]="form.controls.colors.invalid && form.controls.colors.touched" required />
+            @if (form.controls.colors.invalid && form.controls.colors.touched) {
+              <span class="field__error">To pole jest wymagane.</span>
+            }
+          </div>
+
+          <div class="field">
+            <label class="field__label">Opis / dodatkowe informacje</label>
+            <textarea class="textarea" formControlName="description" [class.is-invalid]="form.controls.description.invalid && form.controls.description.touched" required></textarea>
+            @if (form.controls.description.invalid && form.controls.description.touched) {
+              <span class="field__error">To pole jest wymagane.</span>
+            }
+          </div>
+
+          <div class="field" style="margin-bottom: 0;">
+            <label class="field__label">Zdjęcia inspiracji</label>
+            <input class="input" type="file" accept="image/*" multiple (change)="onFilesSelected($event)" />
+            @if (submitAttempted() && selectedImages().length === 0) {
+              <span class="field__error">Dodaj co najmniej jedno zdjęcie.</span>
+            }
+            @if (selectedImages().length > 0) {
+              <div class="image-gallery" style="margin-top: .75rem;">
+                @for (image of selectedImages(); track image.url; let i = $index) {
+                  <div class="image-gallery__item">
+                    <img [src]="image.url" [alt]="image.file.name" />
+                    <button type="button" class="image-gallery__remove" (click)="removeImage(i)" aria-label="Usuń zdjęcie">✕</button>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+
+          <div style="position: absolute; left: -9999px;" aria-hidden="true">
+            <label>Nie wypełniaj tego pola</label>
+            <input type="text" formControlName="honeypot" tabindex="-1" autocomplete="off" />
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary" style="width: 100%;" [disabled]="submitting()">
+            {{ submitting() ? 'Wysyłanie…' : 'Wyślij zapytanie' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  }
+</div>

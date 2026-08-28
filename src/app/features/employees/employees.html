@@ -1,0 +1,65 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <span class="page-header__eyebrow">Zespół</span>
+      <h1>Pracownicy</h1>
+      <p class="page-header__subtitle">Osoby dostępne do przypisania przy obsłudze eventów.</p>
+    </div>
+    <div class="page-actions">
+      <button type="button" class="btn btn-primary" (click)="openCreate()">+ Dodaj pracownika</button>
+    </div>
+  </div>
+
+  <div class="card">
+    @if (loading()) {
+      <div class="loader"><div class="spinner"></div></div>
+    } @else if (employees().length === 0) {
+      <div class="empty-state">
+        <div class="empty-state__icon">🧑‍💼</div>
+        <p>Brak pracowników. Dodaj pierwszego, aby móc przypisywać go do eventów.</p>
+      </div>
+    } @else {
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Imię i nazwisko</th>
+              <th>Stawka godzinowa</th>
+              <th class="text-right">Akcje</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (employee of employees(); track employee.id) {
+              <tr>
+                <td>{{ employee.firstName }} {{ employee.lastName }}</td>
+                <td class="mono">{{ employee.hourlyRate | number: '1.2-2' }} zł/h</td>
+                <td>
+                  <div class="table-actions">
+                    <button type="button" class="btn btn-secondary btn-sm" (click)="openEdit(employee)">Edytuj</button>
+                    <button type="button" class="btn btn-danger btn-sm" (click)="remove(employee)">Usuń</button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <app-paginator
+        [currentPage]="currentPage()"
+        [totalPages]="totalPages()"
+        [totalElements]="totalElements()"
+        [pageSize]="15"
+        (pageChange)="load($event)"
+      />
+    }
+  </div>
+</div>
+
+@if (modalOpen()) {
+  <app-employee-form-modal
+    [employee]="editingEmployee()"
+    [saving]="saving()"
+    (close)="closeModal()"
+    (save)="submit($event)"
+  />
+}

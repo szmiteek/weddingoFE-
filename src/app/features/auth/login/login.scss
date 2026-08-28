@@ -1,0 +1,29 @@
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg, #f4f5fa);
+  padding: 1.5rem;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 24rem;
+}
+
+.login-card__header {
+  justify-content: center;
+  text-align: center;
+}
+
+.login-logo {
+  margin: 0;
+}
+
+.login-logo img {
+  height: 5.5rem;
+  width: auto;
+  display: block;
+  margin: 0 auto;
+}

@@ -1,0 +1,31 @@
+@if (totalPages() > 1) {
+  <div class="pagination">
+    <span class="pagination__info">
+      {{ rangeStart() }}–{{ rangeEnd() }} z {{ totalElements() }}
+    </span>
+    <div class="pagination__controls">
+      <button type="button" class="pagination__page" [disabled]="currentPage() === 0" (click)="goTo(currentPage() - 1)" aria-label="Poprzednia strona">
+        ‹
+      </button>
+      @for (page of pages(); track page) {
+        <button
+          type="button"
+          class="pagination__page"
+          [class.is-active]="page === currentPage()"
+          (click)="goTo(page)"
+        >
+          {{ page + 1 }}
+        </button>
+      }
+      <button
+        type="button"
+        class="pagination__page"
+        [disabled]="currentPage() >= totalPages() - 1"
+        (click)="goTo(currentPage() + 1)"
+        aria-label="Następna strona"
+      >
+        ›
+      </button>
+    </div>
+  </div>
+}

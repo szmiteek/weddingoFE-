@@ -1,0 +1,90 @@
+<div class="card__header">
+  <h2>{{ title() }}</h2>
+  @if (!readOnly()) {
+    @if (rows.length === 0) {
+      <button type="button" class="btn btn-secondary btn-sm" (click)="addRow()">
+        <span class="material-symbols-outlined">add</span>
+        Dodaj wiersz
+      </button>
+    } @else if (!editMode()) {
+      <button type="button" class="btn btn-secondary btn-sm" (click)="startEdit()">
+        <span class="material-symbols-outlined">edit</span>
+        Edytuj
+      </button>
+    } @else {
+      <div style="display:flex; gap:.5rem;">
+        <button type="button" class="btn btn-secondary btn-sm" (click)="cancelEdit()" [disabled]="saving()">Anuluj</button>
+        @if (canSave()) {
+          <button type="button" class="btn btn-primary btn-sm" (click)="save()" [disabled]="saving()">
+            {{ saving() ? 'Zapisywanie…' : 'Zapisz' }}
+          </button>
+        }
+      </div>
+    }
+  }
+</div>
+
+<div class="card__body">
+  <div class="table-wrap">
+    <table class="table" [formGroup]="form">
+      <thead>
+        <tr>
+          <th>Nazwa</th>
+          <th>Ilość szt.</th>
+          <th>Cena za szt.</th>
+          <th>Suma</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody formArrayName="rows">
+        @for (row of rows.controls; track row; let i = $index) {
+          <tr [formGroupName]="i">
+            <td>
+              <input class="input" [class.is-invalid]="isInvalid(i, 'name')" formControlName="name" />
+            </td>
+            <td>
+              <input class="input" [class.is-invalid]="isInvalid(i, 'quantity')" type="number" formControlName="quantity" />
+            </td>
+            <td>
+              <input
+                class="input"
+                [class.is-invalid]="isInvalid(i, 'unitPrice')"
+                type="number"
+                step="0.01"
+                formControlName="unitPrice"
+              />
+            </td>
+            <td>{{ rowSum(i) | number: '1.2-2' }} zł</td>
+            <td>
+              @if (!readOnly() && editMode()) {
+                <div class="table-actions">
+                  <button type="button" class="icon-btn" (click)="removeRow(i)" aria-label="Usuń wiersz" title="Usuń wiersz">
+                    <span class="material-symbols-outlined">delete</span>
+                  </button>
+                </div>
+              }
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="5" class="text-muted">Brak wycenionych elementów.</td>
+          </tr>
+        }
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="3" class="pricing-total-label">Razem</td>
+          <td class="pricing-total-value">{{ total() | number: '1.2-2' }} zł</td>
+          <td></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  @if (!readOnly() && editMode() && rows.length > 0) {
+    <button type="button" class="btn btn-secondary btn-sm" (click)="addRow()" style="margin-top: .75rem;">
+      <span class="material-symbols-outlined">add</span>
+      Dodaj wiersz
+    </button>
+  }
+</div>
