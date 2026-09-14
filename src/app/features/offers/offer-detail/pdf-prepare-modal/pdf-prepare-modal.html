@@ -1,5 +1,5 @@
-<div class="modal-backdrop" (click)="close.emit()">
-  <div class="modal-panel modal-panel--wide" [class.modal-panel--pricing]="step() === 2" (click)="$event.stopPropagation()">
+<div class="modal-backdrop">
+  <div class="modal-panel modal-panel--wide" [class.modal-panel--pricing]="step() === 2">
     <div class="modal-header">
       <h2>Przygotuj ofertę PDF</h2>
       <button type="button" class="modal-close" (click)="close.emit()" aria-label="Zamknij">✕</button>
