@@ -1,8 +1,9 @@
 import { Component, inject, input, output, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { Offer, OfferPdfOverrides } from '../../../../core/models/offer.model';
+import { Offer, OfferPdfField, OfferPdfOverrides } from '../../../../core/models/offer.model';
 import { EventElement } from '../../../../core/models/event-element.model';
 import { EventElementService } from '../../../../core/services/event-element.service';
+import { OfferService } from '../../../../core/services/offer.service';
 import { EventElementsTable } from '../event-elements-table/event-elements-table';
 
 @Component({
@@ -13,6 +14,7 @@ import { EventElementsTable } from '../event-elements-table/event-elements-table
 export class PdfPrepareModal {
   private fb = inject(FormBuilder);
   private eventElementService = inject(EventElementService);
+  private offerService = inject(OfferService);
 
   offer = input.required<Offer>();
 
@@ -21,16 +23,11 @@ export class PdfPrepareModal {
 
   protected step = signal<1 | 2>(1);
   protected elements = signal<EventElement[]>([]);
+  /** Fields chosen in Ustawienia → Ustawienia oferty, pre-filled from this offer; null while loading. */
+  protected fields = signal<OfferPdfField[] | null>(null);
 
-  protected form = this.fb.nonNullable.group({
-    date: [''],
-    venue: [''],
-    guests: this.fb.control<number | null>(null),
-    colors: [''],
-    mainTable: [''],
-    guestsTable: [''],
-    flowers: [''],
-  });
+  /** One control per field, keyed by the field's key — the set depends on the tenant's settings. */
+  protected form = this.fb.nonNullable.record<string>({});
 
   protected pricingForm = this.fb.nonNullable.group({
     description: [''],
@@ -38,17 +35,13 @@ export class PdfPrepareModal {
 
   ngOnInit(): void {
     const offer = this.offer();
-    const mainTable = offer.mainTableType ?? '';
-    this.form.setValue({
-      date: offer.eventDate ?? '',
-      venue: offer.venue ?? '',
-      guests: offer.guests ?? null,
-      colors: offer.colors ?? '',
-      mainTable,
-      guestsTable: offer.guestsTableType ?? '',
-      flowers: '',
-    });
     this.pricingForm.setValue({ description: offer.decorationDescription ?? '' });
+    this.offerService.getPdfFields(offer.id).subscribe((fields) => {
+      for (const field of fields) {
+        this.form.addControl(field.key, this.fb.nonNullable.control(field.value));
+      }
+      this.fields.set(fields);
+    });
     this.loadElements();
   }
 
@@ -70,8 +63,8 @@ export class PdfPrepareModal {
 
   submit(): void {
     this.generate.emit({
-      ...this.form.getRawValue(),
-      description: this.pricingForm.getRawValue().description,
+      fields: this.form.getRawValue(),
+      decorationDescription: this.pricingForm.getRawValue().description,
     });
   }
 }

@@ -64,3 +64,225 @@
     gap: 0.4rem;
   }
 }
+
+/* Ustawienia oferty */
+
+.offer-settings-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 17rem;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.offer-settings-preview {
+  position: sticky;
+  top: 1.5rem;
+}
+
+@media (max-width: 1100px) {
+  .offer-settings-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .offer-settings-preview {
+    position: static;
+  }
+}
+
+.logo-upload {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.logo-upload__preview {
+  width: 11rem;
+  height: 4.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-alt);
+}
+
+.logo-upload__preview img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.logo-upload__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.color-field {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.color-field input[type='color'] {
+  width: 2.75rem;
+  height: 2.5rem;
+  padding: 0.2rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  cursor: pointer;
+}
+
+.color-field .input {
+  max-width: 8rem;
+  text-transform: uppercase;
+}
+
+.field__label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.fields-counter {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.fields-counter.is-full {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+/* Miniature of page 1, so colour, orientation, logo and field choice are visible before generating. */
+
+.offer-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 7% 6%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 6px 18px rgba(28, 30, 43, 0.08);
+  overflow: hidden;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.offer-preview--landscape {
+  aspect-ratio: 297 / 210;
+}
+
+.offer-preview--portrait {
+  aspect-ratio: 210 / 297;
+  width: 72%;
+  margin: 0 auto;
+}
+
+.offer-preview__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid color-mix(in srgb, currentColor 22%, transparent);
+}
+
+.offer-preview__title {
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.offer-preview__logo {
+  max-width: 40%;
+  max-height: 1.3rem;
+  object-fit: contain;
+}
+
+.offer-preview__fields {
+  display: grid;
+  gap: 0.4rem 0.5rem;
+}
+
+.offer-preview__field {
+  min-width: 0;
+  font-size: 0.45rem;
+  text-transform: uppercase;
+  opacity: 0.7;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.offer-preview__field::after {
+  content: '';
+  display: block;
+  width: 80%;
+  height: 3px;
+  margin-top: 2px;
+  border-radius: 2px;
+  background: currentColor;
+  opacity: 0.35;
+}
+
+/* Order of the selected fields — drag and drop (Angular CDK) */
+
+.field-order {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.field-order__item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.3rem 0.75rem 0.3rem 0.35rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  font-size: 0.88rem;
+}
+
+.field-order__index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  min-width: 1.4rem;
+  height: 1.4rem;
+  border-radius: 999px;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.field-order__label {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.field-order__item.cdk-drag-preview {
+  border-color: var(--color-primary);
+  box-shadow: 0 10px 28px rgba(28, 30, 43, 0.18);
+}
+
+.field-order__item.cdk-drag-placeholder {
+  opacity: 0.35;
+  background: var(--color-primary-soft);
+}
+
+.field-order.cdk-drop-list-dragging .field-order__item:not(.cdk-drag-placeholder),
+.field-order__item.cdk-drag-animating {
+  transition: transform 200ms cubic-bezier(0, 0, 0.2, 1);
+}

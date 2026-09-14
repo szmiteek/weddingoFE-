@@ -52,15 +52,17 @@ export interface OfferUpdateStatusCommand {
   status: OfferStatus;
 }
 
+/** A field of the PDF's "Informacje ogólne" page, pre-filled from the offer. */
+export interface OfferPdfField {
+  key: string;
+  label: string;
+  value: string;
+}
+
+/** Values edited in the PDF modal — used for the generated file only. */
 export interface OfferPdfOverrides {
-  date: string;
-  venue: string;
-  guests: number | null;
-  colors: string;
-  mainTable: string;
-  guestsTable: string;
-  flowers: string;
-  description: string;
+  fields: Record<string, string>;
+  decorationDescription: string;
 }
 
 export interface OfferFilter {

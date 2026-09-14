@@ -2,7 +2,14 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { Offer, OfferFilter, OfferPdfOverrides, OfferUpdateCommand, OfferUpdateStatusCommand } from '../models/offer.model';
+import {
+  Offer,
+  OfferFilter,
+  OfferPdfField,
+  OfferPdfOverrides,
+  OfferUpdateCommand,
+  OfferUpdateStatusCommand,
+} from '../models/offer.model';
 import { Page } from '../models/page.model';
 
 @Injectable({ providedIn: 'root' })
@@ -26,17 +33,13 @@ export class OfferService {
     return this.http.get<Offer>(`${this.baseUrl}/${id}`);
   }
 
+  /** The fields chosen in the offer settings, pre-filled from this offer — step 1 of the PDF modal. */
+  getPdfFields(id: number): Observable<OfferPdfField[]> {
+    return this.http.get<OfferPdfField[]>(`${this.baseUrl}/${id}/pdf/fields`);
+  }
+
   generatePdf(id: number, overrides: OfferPdfOverrides): Observable<Blob> {
-    let params = new HttpParams();
-    if (overrides.date) params = params.set('date', overrides.date);
-    if (overrides.venue) params = params.set('venue', overrides.venue);
-    if (overrides.guests != null) params = params.set('guests', overrides.guests);
-    if (overrides.colors) params = params.set('colors', overrides.colors);
-    if (overrides.mainTable) params = params.set('mainTable', overrides.mainTable);
-    if (overrides.guestsTable) params = params.set('guestsTable', overrides.guestsTable);
-    if (overrides.flowers) params = params.set('flowers', overrides.flowers);
-    if (overrides.description) params = params.set('description', overrides.description);
-    return this.http.get(`${this.baseUrl}/${id}/pdf`, { params, responseType: 'blob' });
+    return this.http.post(`${this.baseUrl}/${id}/pdf`, overrides, { responseType: 'blob' });
   }
 
   downloadSavedPdf(id: number): Observable<Blob> {

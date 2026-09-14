@@ -39,6 +39,16 @@
           <span class="material-symbols-outlined">mail</span>
           Ustawienia e-mail
         </button>
+
+        <button
+          type="button"
+          class="settings-nav__item"
+          [class.is-active]="activeSection() === 'offer'"
+          (click)="activeSection.set('offer')"
+        >
+          <span class="material-symbols-outlined">picture_as_pdf</span>
+          Ustawienia oferty
+        </button>
       }
     </nav>
 
@@ -180,6 +190,200 @@
             </div>
           </form>
         </div>
+      }
+
+      @if (activeSection() === 'offer' && !authService.isSuperAdmin()) {
+        @if (offerSettings(); as settings) {
+          <div class="offer-settings-grid">
+            <div>
+              <div class="card" style="margin-bottom: 1.5rem;">
+                <div class="card__header">
+                  <h2>Logo</h2>
+                </div>
+
+                <div class="card__body">
+                  <div class="logo-upload">
+                    <div class="logo-upload__preview">
+                      @if (logoUrl(); as url) {
+                        <img [src]="url" alt="Logo firmy" />
+                      } @else {
+                        <span class="text-muted">Brak logo</span>
+                      }
+                    </div>
+
+                    <div>
+                      <div class="logo-upload__actions">
+                        <label class="btn btn-secondary">
+                          <input
+                            type="file"
+                            accept="image/png,image/jpeg"
+                            hidden
+                            [disabled]="uploadingLogo()"
+                            (change)="onLogoSelected($event)"
+                          />
+                          {{ uploadingLogo() ? 'Wgrywanie…' : settings.hasLogo ? 'Zmień logo' : 'Wgraj logo' }}
+                        </label>
+                        @if (settings.hasLogo) {
+                          <button type="button" class="btn btn-outline" (click)="removeLogo()" [disabled]="uploadingLogo()">
+                            Usuń logo
+                          </button>
+                        }
+                      </div>
+                      <span class="field__hint">PNG lub JPG, maksymalnie 2 MB. Logo pojawi się w prawym górnym rogu obu stron oferty.</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="card__header">
+                  <h2>Wygląd i zawartość</h2>
+                </div>
+
+                <form [formGroup]="offerForm" (ngSubmit)="saveOfferSettings()">
+                  <div class="card__body">
+                    <div class="field">
+                      <label class="field__label" for="offer-background">Kolor tła</label>
+                      <div class="color-field">
+                        <input id="offer-background" type="color" formControlName="backgroundColor" />
+                        <input
+                          class="input mono"
+                          formControlName="backgroundColor"
+                          maxlength="7"
+                          aria-label="Kolor tła w formacie HEX"
+                          [class.is-invalid]="offerForm.controls.backgroundColor.invalid"
+                        />
+                      </div>
+                      @if (offerForm.controls.backgroundColor.invalid) {
+                        <span class="field__error">Podaj kolor w formacie #RRGGBB.</span>
+                      } @else {
+                        <span class="field__hint">Kolor tekstu dobierze się automatycznie, żeby był czytelny na tym tle.</span>
+                      }
+                    </div>
+
+                    <div class="field">
+                      <span class="field__label">Orientacja strony</span>
+                      <div class="checklist">
+                        <label class="checklist__item">
+                          <input type="radio" formControlName="orientation" value="LANDSCAPE" />
+                          Poziomo
+                        </label>
+                        <label class="checklist__item">
+                          <input type="radio" formControlName="orientation" value="PORTRAIT" />
+                          Pionowo
+                        </label>
+                      </div>
+                    </div>
+
+                    <div class="field">
+                      <div class="field__label-row">
+                        <span class="field__label">Pola na stronie „Informacje ogólne”</span>
+                        <span class="fields-counter" [class.is-full]="infoFieldsFull()">
+                          {{ selectedInfoFields().length }} / {{ settings.maxInfoFields }}
+                        </span>
+                      </div>
+                      <div class="checklist">
+                        @for (field of settings.availableFields; track field.key) {
+                          <label class="checklist__item">
+                            <input
+                              type="checkbox"
+                              [checked]="isInfoFieldSelected(field.key)"
+                              [disabled]="!isInfoFieldSelected(field.key) && infoFieldsFull()"
+                              (change)="toggleInfoField(field.key)"
+                            />
+                            {{ field.label }}
+                          </label>
+                        }
+                      </div>
+                      @if (selectedInfoFields().length === 0) {
+                        <span class="field__error">Wybierz co najmniej jedno pole.</span>
+                      }
+                    </div>
+
+                    @if (selectedInfoFields().length > 0) {
+                      <div class="field" style="margin-bottom: 0;">
+                        <span class="field__label">Kolejność pól</span>
+                        <ol
+                          class="field-order"
+                          cdkDropList
+                          cdkDropListLockAxis="y"
+                          (cdkDropListDropped)="reorderInfoField($event)"
+                        >
+                          @for (key of selectedInfoFields(); track key; let i = $index) {
+                            <li class="field-order__item" cdkDrag cdkDragPreviewContainer="parent">
+                              <span
+                                class="drag-handle"
+                                cdkDragHandle
+                                aria-label="Przeciągnij, aby zmienić kolejność"
+                                title="Przeciągnij, aby zmienić kolejność"
+                              >
+                                <span class="material-symbols-outlined">drag_indicator</span>
+                              </span>
+                              <span class="field-order__index">{{ i + 1 }}</span>
+                              <span class="field-order__label">{{ infoFieldLabel(key) }}</span>
+                            </li>
+                          }
+                        </ol>
+                        <span class="field__hint">
+                          Przeciągnij pola, żeby ustawić ich kolejność w PDF-ie. Nowo zaznaczone pole trafia na koniec listy.
+                        </span>
+                      </div>
+                    }
+                  </div>
+
+                  <div class="modal-footer">
+                    <button
+                      type="submit"
+                      class="btn btn-primary"
+                      [disabled]="savingOfferSettings() || offerForm.invalid || selectedInfoFields().length === 0"
+                    >
+                      {{ savingOfferSettings() ? 'Zapisywanie…' : 'Zapisz ustawienia' }}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+
+            <aside class="offer-settings-preview">
+              <div class="card">
+                <div class="card__header">
+                  <h2>Podgląd</h2>
+                </div>
+                <div class="card__body">
+                  <div
+                    class="offer-preview"
+                    [class.offer-preview--landscape]="offerForm.controls.orientation.value === 'LANDSCAPE'"
+                    [class.offer-preview--portrait]="offerForm.controls.orientation.value === 'PORTRAIT'"
+                    [style.background-color]="offerForm.controls.backgroundColor.valid ? offerForm.controls.backgroundColor.value : null"
+                    [style.color]="previewTextColor()"
+                  >
+                    <div class="offer-preview__header">
+                      <span class="offer-preview__title">Informacje ogólne</span>
+                      @if (logoUrl(); as url) {
+                        <img class="offer-preview__logo" [src]="url" alt="" />
+                      }
+                    </div>
+                    <div
+                      class="offer-preview__fields"
+                      [style.grid-template-columns]="
+                        offerForm.controls.orientation.value === 'PORTRAIT' ? 'repeat(2, minmax(0, 1fr))' : 'repeat(4, minmax(0, 1fr))'
+                      "
+                    >
+                      @for (label of selectedInfoFieldLabels(); track label) {
+                        <span class="offer-preview__field">{{ label }}</span>
+                      }
+                    </div>
+                  </div>
+                  <span class="field__hint">Strona 2 („Wycena”) ma ten sam nagłówek, tło i logo.</span>
+                </div>
+              </div>
+            </aside>
+          </div>
+        } @else {
+          <div class="card">
+            <div class="card__body text-muted">Wczytywanie ustawień oferty…</div>
+          </div>
+        }
       }
     </div>
   </div>

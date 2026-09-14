@@ -20,43 +20,31 @@
     @if (step() === 1) {
       <div [formGroup]="form">
         <div class="modal-body">
-          <div class="form-grid">
-            <div class="field">
-              <label class="field__label">Data</label>
-              <input class="input" type="date" formControlName="date" />
+          @if (fields(); as fields) {
+            <div class="form-grid">
+              @for (field of fields; track field.key) {
+                <div class="field" [style.grid-column]="field.key === 'DESCRIPTION' ? '1 / -1' : null">
+                  <label class="field__label" [for]="'pdf-field-' + field.key">{{ field.label }}</label>
+                  @if (field.key === 'DESCRIPTION') {
+                    <textarea class="textarea" rows="4" [id]="'pdf-field-' + field.key" [formControlName]="field.key"></textarea>
+                  } @else {
+                    <input class="input" [id]="'pdf-field-' + field.key" [formControlName]="field.key" />
+                  }
+                </div>
+              }
             </div>
-            <div class="field">
-              <label class="field__label">Miejsce</label>
-              <input class="input" formControlName="venue" />
-            </div>
-            <div class="field">
-              <label class="field__label">Liczba gości</label>
-              <input class="input" type="number" formControlName="guests" />
-            </div>
-            <div class="field">
-              <label class="field__label">Kolorystyka</label>
-              <input class="input" formControlName="colors" />
-            </div>
-            <div class="field">
-              <label class="field__label">Stół prezydialny</label>
-              <input class="input" formControlName="mainTable" />
-            </div>
-            <div class="field">
-              <label class="field__label">Stoły gości</label>
-              <input class="input" formControlName="guestsTable" />
-            </div>
-          </div>
-
-          <div class="field">
-            <label class="field__label">Kwiaty</label>
-            <input class="input" formControlName="flowers" />
-          </div>
+            <p class="field__hint" style="margin: 0;">
+              Zmiany dotyczą tylko tego pliku. Pola, kolor tła, orientację i logo ustawisz w Ustawienia → Ustawienia oferty.
+            </p>
+          } @else {
+            <p class="text-muted">Wczytywanie pól…</p>
+          }
         </div>
       </div>
 
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" (click)="close.emit()">Anuluj</button>
-        <button type="button" class="btn btn-primary" (click)="nextStep()">Dalej</button>
+        <button type="button" class="btn btn-primary" (click)="nextStep()" [disabled]="!fields()">Dalej</button>
       </div>
     }
 
