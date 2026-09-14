@@ -26,26 +26,48 @@
 
 <div class="card__body">
   <div class="table-wrap">
-    <table class="table" [formGroup]="form">
+    <table class="table pricing-table" [formGroup]="form">
       <thead>
         <tr>
+          @if (canReorder()) {
+            <th class="col-drag"></th>
+          }
           <th>Nazwa</th>
-          <th>Ilość szt.</th>
-          <th>Cena za szt.</th>
-          <th>Suma</th>
-          <th></th>
+          <th class="col-qty">Ilość szt.</th>
+          <th class="col-price">Cena za szt.</th>
+          <th class="col-sum">Suma</th>
+          <th class="col-actions"></th>
         </tr>
       </thead>
-      <tbody formArrayName="rows">
+      <tbody
+        formArrayName="rows"
+        cdkDropList
+        cdkDropListLockAxis="y"
+        [cdkDropListDisabled]="!canReorder()"
+        (cdkDropListDropped)="onDrop($event)"
+      >
         @for (row of rows.controls; track row; let i = $index) {
-          <tr [formGroupName]="i">
+          <!-- Preview stays inside the table, so the dragged row keeps the table's cell styles. -->
+          <tr [formGroupName]="i" cdkDrag cdkDragPreviewContainer="parent">
+            @if (canReorder()) {
+              <td class="col-drag">
+                <span
+                  class="drag-handle"
+                  cdkDragHandle
+                  aria-label="Przeciągnij, aby zmienić kolejność"
+                  title="Przeciągnij, aby zmienić kolejność"
+                >
+                  <span class="material-symbols-outlined">drag_indicator</span>
+                </span>
+              </td>
+            }
             <td>
               <input class="input" [class.is-invalid]="isInvalid(i, 'name')" formControlName="name" />
             </td>
-            <td>
+            <td class="col-qty">
               <input class="input" [class.is-invalid]="isInvalid(i, 'quantity')" type="number" formControlName="quantity" />
             </td>
-            <td>
+            <td class="col-price">
               <input
                 class="input"
                 [class.is-invalid]="isInvalid(i, 'unitPrice')"
@@ -54,8 +76,8 @@
                 formControlName="unitPrice"
               />
             </td>
-            <td>{{ rowSum(i) | number: '1.2-2' }} zł</td>
-            <td>
+            <td class="col-sum">{{ rowSum(i) | number: '1.2-2' }} zł</td>
+            <td class="col-actions">
               @if (!readOnly() && editMode()) {
                 <div class="table-actions">
                   <button type="button" class="icon-btn" (click)="removeRow(i)" aria-label="Usuń wiersz" title="Usuń wiersz">
@@ -67,13 +89,13 @@
           </tr>
         } @empty {
           <tr>
-            <td colspan="5" class="text-muted">Brak wycenionych elementów.</td>
+            <td [attr.colspan]="canReorder() ? 6 : 5" class="text-muted">Brak wycenionych elementów.</td>
           </tr>
         }
       </tbody>
       <tfoot>
         <tr>
-          <td colspan="3" class="pricing-total-label">Razem</td>
+          <td [attr.colspan]="canReorder() ? 4 : 3" class="pricing-total-label">Razem</td>
           <td class="pricing-total-value">{{ total() | number: '1.2-2' }} zł</td>
           <td></td>
         </tr>

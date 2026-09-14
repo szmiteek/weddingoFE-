@@ -1,14 +1,15 @@
+import { CdkDrag, CdkDragDrop, CdkDragHandle, CdkDropList } from '@angular/cdk/drag-drop';
 import { DecimalPipe } from '@angular/common';
 import { Component, effect, inject, input, output, signal, untracked } from '@angular/core';
 import { FormArray, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { forkJoin } from 'rxjs';
-import { EventElement } from '../../../../core/models/event-element.model';
+import { EventElement, EventElementUpdateCommand } from '../../../../core/models/event-element.model';
 import { EventElementService } from '../../../../core/services/event-element.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 
 @Component({
   selector: 'app-event-elements-table',
-  imports: [ReactiveFormsModule, DecimalPipe],
+  imports: [ReactiveFormsModule, DecimalPipe, CdkDropList, CdkDrag, CdkDragHandle],
   templateUrl: './event-elements-table.html',
 })
 export class EventElementsTable {
@@ -27,6 +28,9 @@ export class EventElementsTable {
 
   protected saving = signal(false);
   protected editMode = signal(false);
+
+  /** Row order isn't a form field, so moving rows doesn't mark the form dirty — track it separately. */
+  private orderChanged = false;
 
   protected form = this.fb.group({
     rows: this.fb.array<ReturnType<typeof this.createRow>>([]),
@@ -51,6 +55,7 @@ export class EventElementsTable {
 
   private rebuildRows(elements: EventElement[]): void {
     this.rows.clear();
+    this.orderChanged = false;
     const enabled = !this.readOnly() && this.editMode();
     for (const element of elements) {
       const row = this.createRow(element.id, element.name, element.quantity, element.unitPrice);
@@ -100,6 +105,20 @@ export class EventElementsTable {
     this.rows.push(row);
   }
 
+  canReorder(): boolean {
+    return !this.readOnly() && this.editMode() && !this.saving();
+  }
+
+  onDrop(event: CdkDragDrop<unknown>): void {
+    if (event.previousIndex === event.currentIndex) {
+      return;
+    }
+    const row = this.rows.at(event.previousIndex);
+    this.rows.removeAt(event.previousIndex, { emitEvent: false });
+    this.rows.insert(event.currentIndex, row);
+    this.orderChanged = true;
+  }
+
   rowSum(index: number): number {
     const { quantity, unitPrice } = this.rows.at(index).getRawValue();
     return (quantity ?? 0) * (unitPrice ?? 0);
@@ -127,10 +146,13 @@ export class EventElementsTable {
   }
 
   hasChanges(): boolean {
-    return this.rows.controls.some((row, index) => {
-      const value = row.getRawValue();
-      return value.id == null ? !this.isRowBlank(index) : row.dirty;
-    });
+    return (
+      this.orderChanged ||
+      this.rows.controls.some((row, index) => {
+        const value = row.getRawValue();
+        return value.id == null ? !this.isRowBlank(index) : row.dirty;
+      })
+    );
   }
 
   canSave(): boolean {
@@ -142,8 +164,10 @@ export class EventElementsTable {
       return;
     }
 
-    const toSave: { id: number | null; command: { name: string; quantity: number; unitPrice: number } }[] = [];
+    const toSave: { id: number | null; command: EventElementUpdateCommand }[] = [];
 
+    // Every row is sent with its on-screen position, so the saved order — and the PDF — match the table exactly.
+    let position = 0;
     this.rows.controls.forEach((row, index) => {
       if (this.isRowBlank(index)) {
         return;
@@ -155,6 +179,7 @@ export class EventElementsTable {
           name: value.name,
           quantity: value.quantity!,
           unitPrice: value.unitPrice!,
+          position: position++,
         },
       });
     });
