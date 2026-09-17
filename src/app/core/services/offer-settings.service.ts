@@ -31,4 +31,18 @@ export class OfferSettingsService {
   deleteLogo(): Observable<OfferSettings> {
     return this.http.delete<OfferSettings>(`${this.baseUrl}/logo`);
   }
+
+  uploadCoverPdf(file: File): Observable<OfferSettings> {
+    const form = new FormData();
+    form.append('coverPdf', file);
+    return this.http.post<OfferSettings>(`${this.baseUrl}/cover-pdf`, form);
+  }
+
+  fetchCoverPdf(): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/cover-pdf`, { responseType: 'blob' });
+  }
+
+  deleteCoverPdf(): Observable<OfferSettings> {
+    return this.http.delete<OfferSettings>(`${this.baseUrl}/cover-pdf`);
+  }
 }

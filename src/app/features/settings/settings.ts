@@ -9,16 +9,18 @@ import { MailIntegrationService } from '../../core/services/mail-integration.ser
 import { NotificationService } from '../../core/services/notification.service';
 import { ConfirmService } from '../../core/services/confirm.service';
 import { OfferSettingsService } from '../../core/services/offer-settings.service';
+import { PdfPreviewModal } from '../../shared/components/pdf-preview-modal/pdf-preview-modal';
 
 type SettingsSection = 'password' | 'form' | 'email' | 'offer';
 
 const HEX_COLOR = /^#[0-9A-Fa-f]{6}$/;
 const MAX_LOGO_BYTES = 2 * 1024 * 1024;
 const LOGO_CONTENT_TYPES = ['image/png', 'image/jpeg'];
+const MAX_COVER_PDF_BYTES = 10 * 1024 * 1024;
 
 @Component({
   selector: 'app-settings',
-  imports: [ReactiveFormsModule, CdkDropList, CdkDrag, CdkDragHandle],
+  imports: [ReactiveFormsModule, CdkDropList, CdkDrag, CdkDragHandle, PdfPreviewModal],
   templateUrl: './settings.html',
   styleUrl: './settings.scss',
 })
@@ -47,6 +49,10 @@ export class Settings {
   protected savingOfferSettings = signal(false);
   protected uploadingLogo = signal(false);
   protected logoUrl = signal<string | null>(null);
+  protected uploadingCoverPdf = signal(false);
+  protected loadingCoverPdf = signal(false);
+  /** The uploaded PDF shown in the preview window. */
+  protected coverPdfPreview = signal<Blob | null>(null);
 
   protected form = this.fb.nonNullable.group({
     currentPassword: ['', Validators.required],
@@ -311,6 +317,120 @@ export class Settings {
       this.offerSettings.update((current) => (current ? { ...current, hasLogo: settings.hasLogo } : settings));
       this.setLogoUrl(null);
       this.notifications.success('Logo zostało usunięte.');
+    });
+  }
+
+  // ---- Własny PDF tenanta ----
+
+  coverPdfPagesLabel(): string {
+    const pages = this.offerSettings()?.coverPdfPages ?? 0;
+    if (pages === 1) {
+      return '1 strona';
+    }
+    const lastDigit = pages % 10;
+    const lastTwoDigits = pages % 100;
+    if (lastDigit >= 2 && lastDigit <= 4 && (lastTwoDigits < 12 || lastTwoDigits > 14)) {
+      return `${pages} strony`;
+    }
+    return `${pages} stron`;
+  }
+
+  onCoverPdfSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) {
+      return;
+    }
+    if (file.type !== 'application/pdf') {
+      this.notifications.error('Plik musi być w formacie PDF.');
+      return;
+    }
+    if (file.size > MAX_COVER_PDF_BYTES) {
+      this.notifications.error('Plik PDF może mieć maksymalnie 10 MB.');
+      return;
+    }
+    this.uploadingCoverPdf.set(true);
+    this.offerSettingsService.uploadCoverPdf(file).subscribe({
+      next: (settings) => {
+        this.uploadingCoverPdf.set(false);
+        // Only the file changed — keep any unsaved edits to colour, orientation and fields.
+        this.offerSettings.update((current) =>
+          current
+            ? {
+                ...current,
+                hasCoverPdf: settings.hasCoverPdf,
+                coverPdfFilename: settings.coverPdfFilename,
+                coverPdfPages: settings.coverPdfPages,
+              }
+            : settings,
+        );
+        this.notifications.success('Plik PDF został zapisany.');
+      },
+      error: () => this.uploadingCoverPdf.set(false),
+    });
+  }
+
+  previewCoverPdf(): void {
+    this.loadingCoverPdf.set(true);
+    this.offerSettingsService.fetchCoverPdf().subscribe({
+      next: (blob) => {
+        this.loadingCoverPdf.set(false);
+        this.coverPdfPreview.set(blob);
+      },
+      error: () => this.loadingCoverPdf.set(false),
+    });
+  }
+
+  closeCoverPdfPreview(): void {
+    this.coverPdfPreview.set(null);
+  }
+
+  downloadCoverPdfPreview(): void {
+    const pdf = this.coverPdfPreview();
+    if (!pdf) {
+      return;
+    }
+    const url = URL.createObjectURL(pdf);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = this.offerSettings()?.coverPdfFilename ?? 'oferta-wstep.pdf';
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  }
+
+  openCoverPdfInNewTab(): void {
+    const pdf = this.coverPdfPreview();
+    if (!pdf) {
+      return;
+    }
+    const url = URL.createObjectURL(pdf);
+    window.open(url, '_blank');
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  }
+
+  async removeCoverPdf(): Promise<void> {
+    const confirmed = await this.confirm.ask({
+      title: 'Usuń własny PDF',
+      message: 'Nowe oferty będą zawierać wyłącznie strony generowane przez aplikację. Pliki wygenerowane wcześniej się nie zmienią.',
+      confirmLabel: 'Usuń plik',
+      danger: true,
+    });
+    if (!confirmed) {
+      return;
+    }
+    this.offerSettingsService.deleteCoverPdf().subscribe((settings) => {
+      this.offerSettings.update((current) =>
+        current
+          ? {
+              ...current,
+              hasCoverPdf: settings.hasCoverPdf,
+              coverPdfFilename: settings.coverPdfFilename,
+              coverPdfPages: settings.coverPdfPages,
+            }
+          : settings,
+      );
+      this.notifications.success('Plik PDF został usunięty.');
     });
   }
 

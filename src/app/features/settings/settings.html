@@ -235,6 +235,52 @@
                 </div>
               </div>
 
+              <div class="card" style="margin-bottom: 1.5rem;">
+                <div class="card__header">
+                  <h2>Własny PDF</h2>
+                </div>
+
+                <div class="card__body">
+                  @if (settings.hasCoverPdf) {
+                    <div class="cover-pdf">
+                      <span class="material-symbols-outlined cover-pdf__icon">picture_as_pdf</span>
+                      <div class="cover-pdf__info">
+                        <span class="cover-pdf__name">{{ settings.coverPdfFilename }}</span>
+                        <span class="cover-pdf__meta">{{ coverPdfPagesLabel() }} przed stronami generowanymi</span>
+                      </div>
+                    </div>
+                  }
+
+                  <div class="logo-upload__actions" style="margin-top: 1rem;">
+                    <label class="btn btn-secondary">
+                      <input
+                        type="file"
+                        accept="application/pdf"
+                        hidden
+                        [disabled]="uploadingCoverPdf()"
+                        (change)="onCoverPdfSelected($event)"
+                      />
+                      {{ uploadingCoverPdf() ? 'Wgrywanie…' : settings.hasCoverPdf ? 'Zmień plik' : 'Wgraj PDF' }}
+                    </label>
+                    @if (settings.hasCoverPdf) {
+                      <button type="button" class="btn btn-outline" (click)="previewCoverPdf()" [disabled]="loadingCoverPdf()">
+                        {{ loadingCoverPdf() ? 'Wczytywanie…' : 'Podejrzyj' }}
+                      </button>
+                      <button type="button" class="btn btn-outline" (click)="removeCoverPdf()" [disabled]="uploadingCoverPdf()">
+                        Usuń plik
+                      </button>
+                    }
+                  </div>
+
+                  <span class="field__hint">
+                    Możesz wgrać własny PDF, na przykład stronę powitalną lub kilka stron o firmie. Trafi on na początek
+                    oferty, a strony generowane przez aplikację („Informacje ogólne” i „Wycena”) zostaną doklejone na
+                    końcu i przyjmą format stron Twojego pliku, żeby cała oferta miała jeden rozmiar. Bez wgranego pliku
+                    strony mają format A4. PDF do 10 MB, bez hasła.
+                  </span>
+                </div>
+              </div>
+
               <div class="card">
                 <div class="card__header">
                   <h2>Wygląd i zawartość</h2>
@@ -273,6 +319,12 @@
                           Pionowo
                         </label>
                       </div>
+                      @if (settings.hasCoverPdf) {
+                        <span class="field__hint">
+                          Masz wgrany własny PDF, więc strony generowane przyjmują jego format i to ustawienie nie ma
+                          teraz wpływu. Zadziała po usunięciu pliku.
+                        </span>
+                      }
                     </div>
 
                     <div class="field">
@@ -383,6 +435,16 @@
           <div class="card">
             <div class="card__body text-muted">Wczytywanie ustawień oferty…</div>
           </div>
+        }
+
+        @if (coverPdfPreview(); as pdf) {
+          <app-pdf-preview-modal
+            [pdf]="pdf"
+            title="Twój PDF — początek oferty"
+            (close)="closeCoverPdfPreview()"
+            (download)="downloadCoverPdfPreview()"
+            (openExternally)="openCoverPdfInNewTab()"
+          />
         }
       }
     </div>
