@@ -5,17 +5,18 @@
   </div>
 } @else {
   <div class="image-gallery">
-    @for (image of images(); track image.id) {
-      <a
-        class="image-gallery__item"
-        [href]="urlFor(image)"
-        target="_blank"
-        rel="noopener"
-        [title]="image.filename"
-      >
+    @for (image of images(); track image.id; let i = $index) {
+      <div class="image-gallery__item">
         @if (urlFor(image); as url) {
           <img [src]="url" [alt]="image.filename" loading="lazy" />
         }
+        <button
+          type="button"
+          class="image-gallery__open"
+          (click)="openLightbox(i)"
+          [attr.aria-label]="'Otwórz zdjęcie ' + image.filename"
+          [title]="image.filename"
+        ></button>
         @if (deletable()) {
           <button
             type="button"
@@ -27,7 +28,15 @@
             ✕
           </button>
         }
-      </a>
+      </div>
     }
   </div>
+
+  @if (lightboxOpen()) {
+    <app-image-lightbox
+      [images]="lightboxImages()"
+      [(index)]="lightboxIndex"
+      (close)="lightboxOpen.set(false)"
+    />
+  }
 }

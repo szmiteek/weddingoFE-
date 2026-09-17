@@ -26,10 +26,27 @@
   }
 }
 
+/* Covers the whole tile so the picture itself opens the preview, with the delete button staying on top. */
+.image-gallery__open {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: transparent;
+  cursor: zoom-in;
+}
+
+.image-gallery__open:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+
 .image-gallery__remove {
   position: absolute;
   top: 0.35rem;
   right: 0.35rem;
+  z-index: 1;
   width: 1.6rem;
   height: 1.6rem;
   border-radius: 50%;
@@ -45,7 +62,8 @@
   transition: opacity 0.15s ease, background-color 0.15s ease;
 }
 
-.image-gallery__item:hover .image-gallery__remove {
+.image-gallery__item:hover .image-gallery__remove,
+.image-gallery__remove:focus-visible {
   opacity: 1;
 }
 
