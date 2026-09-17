@@ -217,12 +217,25 @@ export class OfferDetail {
     setTimeout(() => URL.revokeObjectURL(url), 60_000);
   }
 
+  imagesLeft(): number {
+    return Math.max(0, MAX_IMAGES - this.images().length);
+  }
+
   uploadImages(event: Event): void {
     const input = event.target as HTMLInputElement;
     const files = Array.from(input.files ?? []);
     input.value = ''; // let the same file be picked again after an error
     const offer = this.offer();
     if (!offer || files.length === 0) {
+      return;
+    }
+    // The limit counts the whole offer, not one upload — the backend checks the same thing.
+    if (files.length > this.imagesLeft()) {
+      this.notifications.error(
+        this.imagesLeft() === 0
+          ? `Oferta ma już maksymalną liczbę zdjęć (${MAX_IMAGES}).`
+          : `Do tej oferty możesz dodać jeszcze ${this.imagesLeft()} zdj. (maksymalnie ${MAX_IMAGES}).`,
+      );
       return;
     }
     this.uploadingImages.set(true);

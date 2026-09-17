@@ -13,6 +13,11 @@ export class PublicOfferService {
     return this.http.get<PublicTenantInfo>(`${this.baseUrl}/${token}`);
   }
 
+  /** Public endpoint, so the logo can be used directly as an <img> source — no auth header needed. */
+  logoUrl(token: string): string {
+    return `${this.baseUrl}/${token}/logo`;
+  }
+
   submit(token: string, command: PublicOfferCommand, images: File[]): Observable<void> {
     const formData = new FormData();
     formData.append('personalData', command.personalData);
@@ -30,6 +35,7 @@ export class PublicOfferService {
     formData.append('mainTableSeats', command.mainTableSeats);
     formData.append('guestsTableType', command.guestsTableType);
     formData.append('flowersType', command.flowersType);
+    if (command.appetizersOnTable != null) formData.append('appetizersOnTable', String(command.appetizersOnTable));
     formData.append('honeypot', command.honeypot);
     images.forEach((file) => formData.append('images', file));
 

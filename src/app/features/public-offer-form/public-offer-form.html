@@ -16,13 +16,22 @@
     </div>
   } @else {
     <div class="card public-form-card">
-      <div class="card__header">
+      <div class="card__header public-form-header">
         <div>
           <h1>Zapytanie o ofertę</h1>
           @if (companyName()) {
             <p class="text-muted" style="margin-top: .3rem;">{{ companyName() }}</p>
           }
         </div>
+        @if (logoUrl(); as url) {
+          <!-- If the picture can't be loaded, drop it rather than leave a broken image on a client-facing page. -->
+          <img
+            class="public-form-logo"
+            [src]="url"
+            [alt]="companyName() ?? 'Logo firmy'"
+            (error)="logoUrl.set(null)"
+          />
+        }
       </div>
 
       <form [formGroup]="form" (ngSubmit)="submit()">
@@ -161,6 +170,33 @@
           }
 
           <div class="field">
+            <label class="field__label">Przekąski na stole</label>
+            <div class="checklist">
+              <label class="checklist__item">
+                <input
+                  type="radio"
+                  name="appetizersOnTable"
+                  [checked]="appetizersOnTable() === true"
+                  (change)="appetizersOnTable.set(true)"
+                />
+                Tak
+              </label>
+              <label class="checklist__item">
+                <input
+                  type="radio"
+                  name="appetizersOnTable"
+                  [checked]="appetizersOnTable() === false"
+                  (change)="appetizersOnTable.set(false)"
+                />
+                Nie
+              </label>
+            </div>
+            @if (submitAttempted() && appetizersOnTable() === null) {
+              <span class="field__error">Wybierz jedną z opcji.</span>
+            }
+          </div>
+
+          <div class="field">
             <label class="field__label">Kolorystyka</label>
             <input class="input" formControlName="colors" [class.is-invalid]="form.controls.colors.invalid && form.controls.colors.touched" required />
             @if (form.controls.colors.invalid && form.controls.colors.touched) {
@@ -178,10 +214,27 @@
 
           <div class="field" style="margin-bottom: 0;">
             <label class="field__label">Zdjęcia inspiracji</label>
-            <input class="input" type="file" accept="image/*" multiple (change)="onFilesSelected($event)" />
+            <input
+              class="input"
+              type="file"
+              accept="image/*"
+              multiple
+              [disabled]="selectedImages().length >= maxImages"
+              (change)="onFilesSelected($event)"
+            />
             @if (submitAttempted() && selectedImages().length === 0) {
               <span class="field__error">Dodaj co najmniej jedno zdjęcie.</span>
             }
+            @if (imageLimitHit()) {
+              <span class="field__error">Możesz dodać maksymalnie {{ maxImages }} zdjęć — nadmiarowe pliki zostały pominięte.</span>
+            }
+            <span class="field__hint">
+              @if (imagesLeft() === 0) {
+                Osiągnięto limit {{ maxImages }} zdjęć.
+              } @else {
+                Maksymalnie {{ maxImages }} zdjęć, możesz dodać jeszcze {{ imagesLeft() }}.
+              }
+            </span>
             @if (selectedImages().length > 0) {
               <div class="image-gallery" style="margin-top: .75rem;">
                 @for (image of selectedImages(); track image.url; let i = $index) {

@@ -12,6 +12,27 @@
   max-width: 40rem;
 }
 
+.public-form-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.25rem;
+}
+
+.public-form-logo {
+  flex-shrink: 0;
+  max-width: 9rem;
+  max-height: 4rem;
+  object-fit: contain;
+}
+
+@media (max-width: 480px) {
+  .public-form-logo {
+    max-width: 6rem;
+    max-height: 3rem;
+  }
+}
+
 .image-gallery {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));

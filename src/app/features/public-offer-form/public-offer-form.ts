@@ -22,6 +22,9 @@ interface SingleSelectConfig {
   field: SingleSelectField;
 }
 
+/** Same limit the backend enforces — an offer holds at most this many pictures. */
+const MAX_IMAGES = 5;
+
 @Component({
   selector: 'app-public-offer-form',
   imports: [ReactiveFormsModule],
@@ -62,6 +65,8 @@ export class PublicOfferForm {
   private token = this.route.snapshot.paramMap.get('token') ?? '';
 
   protected companyName = signal<string | null>(null);
+  /** The tenant's logo from their offer settings; null when they haven't uploaded one. */
+  protected logoUrl = signal<string | null>(null);
   protected notFound = signal(false);
   protected loading = signal(true);
   protected submitting = signal(false);
@@ -69,7 +74,11 @@ export class PublicOfferForm {
 
   protected selectedEventTypes = signal<string[]>([]);
   protected selectedDecorationTypes = signal<string[]>([]);
+  /** Yes/no question — null until answered, so an unanswered form can't quietly submit "no". */
+  protected appetizersOnTable = signal<boolean | null>(null);
   protected selectedImages = signal<{ file: File; url: string }[]>([]);
+  /** Set when a pick had to be trimmed to the limit, so the client learns why not everything was added. */
+  protected imageLimitHit = signal(false);
 
   protected submitAttempted = signal(false);
 
@@ -90,6 +99,7 @@ export class PublicOfferForm {
     this.publicOfferService.getTenantInfo(this.token).subscribe({
       next: (info) => {
         this.companyName.set(info.companyName);
+        this.logoUrl.set(info.hasLogo ? this.publicOfferService.logoUrl(this.token) : null);
         this.loading.set(false);
       },
       error: () => {
@@ -129,7 +139,9 @@ export class PublicOfferForm {
       this.selectedEventTypes().length > 0 &&
       this.selectedDecorationTypes().length > 0 &&
       this.allSingleSelectsFilled() &&
-      this.selectedImages().length > 0
+      this.appetizersOnTable() !== null &&
+      this.selectedImages().length > 0 &&
+      this.selectedImages().length <= MAX_IMAGES
     );
   }
 
@@ -143,12 +155,22 @@ export class PublicOfferForm {
     );
   }
 
+  imagesLeft(): number {
+    return Math.max(0, MAX_IMAGES - this.selectedImages().length);
+  }
+
   onFilesSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const files = input.files ? Array.from(input.files) : [];
-    const withUrls = files.map((file) => ({ file, url: URL.createObjectURL(file) }));
-    this.selectedImages.update((list) => [...list, ...withUrls]);
     input.value = '';
+    // Take what still fits and say so, rather than dropping the whole pick.
+    const accepted = files.slice(0, this.imagesLeft());
+    this.imageLimitHit.set(accepted.length < files.length);
+    if (accepted.length === 0) {
+      return;
+    }
+    const withUrls = accepted.map((file) => ({ file, url: URL.createObjectURL(file) }));
+    this.selectedImages.update((list) => [...list, ...withUrls]);
   }
 
   removeImage(index: number): void {
@@ -156,6 +178,7 @@ export class PublicOfferForm {
       URL.revokeObjectURL(list[index].url);
       return list.filter((_, i) => i !== index);
     });
+    this.imageLimitHit.set(false);
   }
 
   submit(): void {
@@ -185,6 +208,7 @@ export class PublicOfferForm {
           mainTableSeats: this.finalValue(this.mainTableSeatsField),
           guestsTableType: this.finalValue(this.guestsTableTypeField),
           flowersType: this.finalValue(this.flowersTypeField),
+          appetizersOnTable: this.appetizersOnTable(),
           honeypot: value.honeypot,
         },
         this.selectedImages().map((image) => image.file),

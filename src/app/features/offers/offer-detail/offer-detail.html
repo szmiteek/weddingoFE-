@@ -266,7 +266,12 @@
     <div class="card" style="margin-top: 1.5rem;">
       <div class="card__header">
         <h2>Zdjęcia inspiracji</h2>
-        <button type="button" class="btn btn-secondary btn-sm" (click)="imageInput.click()" [disabled]="uploadingImages()">
+        <button
+          type="button"
+          class="btn btn-secondary btn-sm"
+          (click)="imageInput.click()"
+          [disabled]="uploadingImages() || imagesLeft() === 0"
+        >
           <span class="material-symbols-outlined">add_photo_alternate</span>
           {{ uploadingImages() ? 'Wysyłanie…' : 'Dodaj zdjęcia' }}
         </button>
@@ -286,6 +291,13 @@
           emptyText="Do tej oferty nie dołączono zdjęć inspiracji."
           (remove)="removeImage($event)"
         />
+        <span class="field__hint" style="display: block; margin-top: 0.75rem;">
+          @if (imagesLeft() === 0) {
+            Oferta ma komplet zdjęć. Usuń któreś, żeby dodać nowe.
+          } @else {
+            Możesz dodać jeszcze {{ imagesLeft() }} zdj.
+          }
+        </span>
       </div>
     </div>
 
