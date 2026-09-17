@@ -41,6 +41,7 @@ const MAX_IMAGES = 5;
     SingleselectDisplay,
     DecimalPipe,
     PdfPrepareModal,
+    PdfPreviewModal,
     SendOfferModal,
     EventElementsTable,
   ],
@@ -75,6 +76,9 @@ export class OfferDetail {
   protected saving = signal(false);
   protected linkedEventId = signal<number | null>(null);
   protected pdfModalOpen = signal(false);
+  /** The PDF shown in the preview window — freshly generated or the one saved with the offer. */
+  protected pdfPreview = signal<Blob | null>(null);
+  protected loadingPdfPreview = signal(false);
   protected priceEditMode = signal(false);
   protected decorationEditMode = signal(false);
   protected savingDecoration = signal(false);
@@ -134,6 +138,42 @@ export class OfferDetail {
     this.pdfModalOpen.set(true);
   }
 
+  /** Opens the PDF saved with the offer in the preview window. */
+  openPdfPreview(): void {
+    this.closeActionsMenu();
+    const offer = this.offer();
+    if (!offer) {
+      return;
+    }
+    this.loadingPdfPreview.set(true);
+    this.offerService.downloadSavedPdf(offer.id).subscribe({
+      next: (blob) => {
+        this.loadingPdfPreview.set(false);
+        this.pdfPreview.set(blob);
+      },
+      error: () => this.loadingPdfPreview.set(false),
+    });
+  }
+
+  closePdfPreview(): void {
+    this.pdfPreview.set(null);
+  }
+
+  downloadPdfPreview(): void {
+    const offer = this.offer();
+    const pdf = this.pdfPreview();
+    if (offer && pdf) {
+      this.saveBlobAsFile(pdf, `oferta-${offer.id}.pdf`);
+    }
+  }
+
+  openPdfPreviewInNewTab(): void {
+    const pdf = this.pdfPreview();
+    if (pdf) {
+      this.openBlobInNewTab(pdf);
+    }
+  }
+
   downloadSavedPdf(): void {
     this.closeActionsMenu();
     const offer = this.offer();
@@ -156,8 +196,9 @@ export class OfferDetail {
       return;
     }
     this.offerService.generatePdf(offer.id, overrides).subscribe((blob) => {
-      this.openBlobInNewTab(blob);
       this.closePdfModal();
+      // Straight into the preview — no extra request, and the file is right there to check.
+      this.pdfPreview.set(blob);
     });
   }
 

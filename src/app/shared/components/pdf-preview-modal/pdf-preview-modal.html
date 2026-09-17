@@ -1,0 +1,25 @@
+<div class="modal-backdrop">
+  <div class="modal-panel modal-panel--pdf">
+    <div class="modal-header">
+      <h2>{{ title() }}</h2>
+      <button type="button" class="modal-close" (click)="close.emit()" aria-label="Zamknij">✕</button>
+    </div>
+
+    <div class="pdf-preview">
+      @if (safeUrl(); as url) {
+        <iframe class="pdf-preview__frame" [src]="url" title="Podgląd oferty PDF"></iframe>
+      }
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" (click)="openExternally.emit()">
+        <span class="material-symbols-outlined">open_in_new</span>
+        Otwórz w nowej karcie
+      </button>
+      <button type="button" class="btn btn-primary" (click)="download.emit()">
+        <span class="material-symbols-outlined">download</span>
+        Pobierz PDF
+      </button>
+    </div>
+  </div>
+</div>

@@ -24,6 +24,10 @@
                 Przygotuj ofertę PDF
               </button>
               @if (offer.pdfGeneratedDate) {
+                <button type="button" class="dropdown__item" (click)="openPdfPreview()" [disabled]="loadingPdfPreview()">
+                  <span class="material-symbols-outlined">visibility</span>
+                  {{ loadingPdfPreview() ? 'Wczytywanie…' : 'Podejrzyj PDF' }}
+                </button>
                 <button type="button" class="dropdown__item" (click)="downloadSavedPdf()">
                   <span class="material-symbols-outlined">download</span>
                   Pobierz zapisany PDF
@@ -287,6 +291,16 @@
 
     @if (pdfModalOpen()) {
       <app-pdf-prepare-modal [offer]="offer" (close)="closePdfModal()" (generate)="generatePdf($event)" />
+    }
+
+    @if (pdfPreview(); as pdf) {
+      <app-pdf-preview-modal
+        [pdf]="pdf"
+        [title]="'Oferta PDF — ' + offer.personalData"
+        (close)="closePdfPreview()"
+        (download)="downloadPdfPreview()"
+        (openExternally)="openPdfPreviewInNewTab()"
+      />
     }
 
     @if (sendModalOpen()) {
