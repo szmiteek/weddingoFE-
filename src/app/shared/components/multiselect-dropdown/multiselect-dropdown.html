@@ -1,0 +1,39 @@
+<button
+  #trigger
+  #origin="cdkOverlayOrigin"
+  cdkOverlayOrigin
+  type="button"
+  class="select multiselect-dropdown__trigger"
+  [id]="triggerId()"
+  [disabled]="disabled()"
+  aria-haspopup="listbox"
+  [attr.aria-expanded]="open()"
+  (click)="toggleOpen()"
+>
+  <span class="multiselect-dropdown__summary" [class.is-placeholder]="selected().length === 0">
+    {{ selected().length > 0 ? selected().join(', ') : placeholder() }}
+  </span>
+  <span class="material-symbols-outlined multiselect-dropdown__arrow">expand_more</span>
+</button>
+
+<ng-template
+  cdkConnectedOverlay
+  [cdkConnectedOverlayOrigin]="origin"
+  [cdkConnectedOverlayOpen]="open()"
+  [cdkConnectedOverlayPositions]="positions"
+  [cdkConnectedOverlayWidth]="panelWidth()"
+  [cdkConnectedOverlayHasBackdrop]="true"
+  cdkConnectedOverlayBackdropClass="cdk-overlay-transparent-backdrop"
+  (backdropClick)="close()"
+  (detach)="close()"
+  (overlayKeydown)="onOverlayKeydown($event)"
+>
+  <div class="multiselect-dropdown__panel" role="listbox" aria-multiselectable="true">
+    @for (option of allOptions(); track option) {
+      <label class="checklist__item multiselect-dropdown__option">
+        <input type="checkbox" [checked]="selected().includes(option)" (change)="toggle(option)" />
+        {{ option }}
+      </label>
+    }
+  </div>
+</ng-template>

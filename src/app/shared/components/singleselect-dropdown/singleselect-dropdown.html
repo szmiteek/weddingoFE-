@@ -1,0 +1,24 @@
+<select
+  class="select"
+  [id]="selectId()"
+  [disabled]="disabled()"
+  (change)="select($any($event.target).value)"
+  (blur)="onTouched()"
+>
+  <option value="" [selected]="choice() === ''">Wybierz…</option>
+  @for (option of options(); track option) {
+    <option [value]="option" [selected]="choice() === option">{{ option }}</option>
+  }
+  <option [value]="OTHER" [selected]="choice() === OTHER">{{ otherLabel() }}</option>
+</select>
+
+@if (choice() === OTHER) {
+  <input
+    class="input singleselect-dropdown__other"
+    [value]="value()"
+    [disabled]="disabled()"
+    placeholder="Podaj jaki"
+    (input)="setCustom($any($event.target).value)"
+    (blur)="onTouched()"
+  />
+}

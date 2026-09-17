@@ -16,8 +16,19 @@ import { ImageGallery } from '../../../shared/components/image-gallery/image-gal
 import { MultiselectDisplay } from '../../../shared/components/multiselect-display/multiselect-display';
 import { SingleselectDisplay } from '../../../shared/components/singleselect-display/singleselect-display';
 import { PdfPrepareModal } from './pdf-prepare-modal/pdf-prepare-modal';
+import { PdfPreviewModal } from '../../../shared/components/pdf-preview-modal/pdf-preview-modal';
 import { SendOfferModal } from './send-offer-modal/send-offer-modal';
 import { EventElementsTable } from './event-elements-table/event-elements-table';
+import {
+  DECORATION_TYPE_OPTIONS,
+  EVENT_TYPE_OPTIONS,
+  FLOWERS_TYPE_OPTIONS,
+  MAIN_TABLE_SEATS_OPTIONS,
+  TABLE_TYPE_OPTIONS,
+} from '../../../core/models/offer-options';
+
+/** Same limit the backend enforces — an offer holds at most this many pictures. */
+const MAX_IMAGES = 5;
 
 @Component({
   selector: 'app-offer-detail',
@@ -37,20 +48,15 @@ import { EventElementsTable } from './event-elements-table/event-elements-table'
   styleUrl: './offer-detail.scss',
 })
 export class OfferDetail {
-  protected readonly eventTypeOptions = [
-    'Dekoracja sali weselnej',
-    'Dekoracja plenerowego miejsca zaślubin',
-    'Bukiet Panny Młodej, Świadkowej, butonierki',
-    'Dekoracja urodzin',
-  ];
+  protected readonly eventTypeOptions = EVENT_TYPE_OPTIONS;
 
-  protected readonly decorationTypeOptions = ['Kompozycje niskie', 'Kompozycje wysokie', 'Kompozycje mieszane'];
+  protected readonly decorationTypeOptions = DECORATION_TYPE_OPTIONS;
 
-  protected readonly tableTypeOptions = ['Prostokątny', 'Okrągły'];
+  protected readonly tableTypeOptions = TABLE_TYPE_OPTIONS;
 
-  protected readonly mainTableSeatsOptions = ['Sami', 'ze Świadkami'];
+  protected readonly mainTableSeatsOptions = MAIN_TABLE_SEATS_OPTIONS;
 
-  protected readonly flowersTypeOptions = ['Naturalne', 'Sztuczne', 'Mieszane (naturalne i sztuczne)'];
+  protected readonly flowersTypeOptions = FLOWERS_TYPE_OPTIONS;
 
   private fb = inject(FormBuilder);
   private route = inject(ActivatedRoute);

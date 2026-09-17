@@ -23,18 +23,58 @@
           @if (fields(); as fields) {
             <div class="form-grid">
               @for (field of fields; track field.key) {
-                <div class="field" [style.grid-column]="field.key === 'DESCRIPTION' ? '1 / -1' : null">
+                <div class="field" [style.grid-column]="field.kind === 'textarea' ? '1 / -1' : null">
                   <label class="field__label" [for]="'pdf-field-' + field.key">{{ field.label }}</label>
-                  @if (field.key === 'DESCRIPTION') {
-                    <textarea class="textarea" rows="4" [id]="'pdf-field-' + field.key" [formControlName]="field.key"></textarea>
-                  } @else {
-                    <input class="input" [id]="'pdf-field-' + field.key" [formControlName]="field.key" />
+                  @switch (field.kind) {
+                    @case ('textarea') {
+                      <textarea class="textarea" rows="4" [id]="'pdf-field-' + field.key" [formControlName]="field.key"></textarea>
+                    }
+                    @case ('single') {
+                      <app-singleselect-dropdown
+                        [options]="field.options ?? []"
+                        [selectId]="'pdf-field-' + field.key"
+                        [formControlName]="field.key"
+                      />
+                    }
+                    @case ('multi') {
+                      <app-multiselect-dropdown
+                        [options]="field.options ?? []"
+                        [triggerId]="'pdf-field-' + field.key"
+                        [formControlName]="field.key"
+                      />
+                    }
+                    @case ('date') {
+                      <input class="input" type="date" [id]="'pdf-field-' + field.key" [formControlName]="field.key" />
+                    }
+                    @case ('number') {
+                      <input class="input" type="number" min="0" [id]="'pdf-field-' + field.key" [formControlName]="field.key" />
+                    }
+                    @case ('email') {
+                      <input
+                        class="input"
+                        type="email"
+                        [id]="'pdf-field-' + field.key"
+                        [formControlName]="field.key"
+                        [class.is-invalid]="form.get(field.key)?.invalid"
+                      />
+                      @if (form.get(field.key)?.invalid) {
+                        <span class="field__error">Podaj poprawny adres e-mail.</span>
+                      }
+                    }
+                    @default {
+                      <input class="input" [id]="'pdf-field-' + field.key" [formControlName]="field.key" />
+                    }
                   }
                 </div>
               }
             </div>
             <p class="field__hint" style="margin: 0;">
-              Zmiany dotyczą tylko tego pliku. Pola, kolor tła, orientację i logo ustawisz w Ustawienia → Ustawienia oferty.
+              @if (readOnly()) {
+                Oferta jest podpisana, więc jej danych nie można już zmieniać.
+              } @else {
+                Zmiany zapiszesz w ofercie przyciskiem „Zapisz” albo razem z wygenerowaniem PDF-a. Pola wybierzesz w
+                Ustawienia → Ustawienia oferty.
+              }
             </p>
           } @else {
             <p class="text-muted">Wczytywanie pól…</p>
@@ -44,7 +84,12 @@
 
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" (click)="close.emit()">Anuluj</button>
-        <button type="button" class="btn btn-primary" (click)="nextStep()" [disabled]="!fields()">Dalej</button>
+        @if (!readOnly()) {
+          <button type="button" class="btn btn-outline" (click)="save()" [disabled]="!canSave()">
+            {{ saving() ? 'Zapisywanie…' : 'Zapisz' }}
+          </button>
+        }
+        <button type="button" class="btn btn-primary" (click)="nextStep()" [disabled]="!fields() || form.invalid">Dalej</button>
       </div>
     }
 
@@ -52,14 +97,19 @@
       <div class="modal-body">
         <div class="pricing-layout">
           <div class="pricing-table-col">
-            <app-event-elements-table [offerId]="offer().id" [elements]="elements()" (changed)="onElementsChanged($event)" />
+            <app-event-elements-table
+              [offerId]="offer().id"
+              [elements]="elements()"
+              [readOnly]="readOnly()"
+              (changed)="onElementsChanged($event)"
+            />
           </div>
 
           <div class="pricing-desc-col" [formGroup]="pricingForm">
             <div class="field">
               <label class="field__label">Opis dekoracji</label>
               <textarea class="textarea" rows="6" formControlName="description"></textarea>
-              <span class="field__hint">Zmiany zapiszą się też w ofercie po wygenerowaniu pliku.</span>
+              <span class="field__hint">Zapisze się w ofercie przyciskiem „Zapisz” albo razem z wygenerowaniem PDF-a.</span>
             </div>
           </div>
         </div>
@@ -67,7 +117,12 @@
 
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" (click)="previousStep()">Wstecz</button>
-        <button type="button" class="btn btn-primary" (click)="submit()">
+        @if (!readOnly()) {
+          <button type="button" class="btn btn-outline" (click)="save()" [disabled]="!canSave()">
+            {{ saving() ? 'Zapisywanie…' : 'Zapisz' }}
+          </button>
+        }
+        <button type="button" class="btn btn-primary" (click)="submit()" [disabled]="saving() || form.invalid">
           <span class="material-symbols-outlined">picture_as_pdf</span>
           Generuj PDF
         </button>

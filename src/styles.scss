@@ -1,5 +1,13 @@
 @use 'sass:color';
 
+// CDK overlay base styles — dropdown panels (e.g. multiselect) render in an overlay so modals can't clip them.
+@import '@angular/cdk/overlay-prebuilt.css';
+
+// Above .modal-backdrop (z-index 1000), so a dropdown opened inside a modal shows on top of it.
+.cdk-overlay-container {
+  z-index: 1100;
+}
+
 :root {
   --color-bg: #f4f5fb;
   --color-surface: #ffffff;

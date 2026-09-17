@@ -2,6 +2,13 @@ import { Component, WritableSignal, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { PublicOfferService } from '../../core/services/public-offer.service';
+import {
+  DECORATION_TYPE_OPTIONS,
+  EVENT_TYPE_OPTIONS,
+  FLOWERS_TYPE_OPTIONS,
+  MAIN_TABLE_SEATS_OPTIONS,
+  TABLE_TYPE_OPTIONS,
+} from '../../core/models/offer-options';
 
 interface SingleSelectField {
   selected: WritableSignal<string | null>;
@@ -27,18 +34,13 @@ export class PublicOfferForm {
   private publicOfferService = inject(PublicOfferService);
 
   protected readonly OTHER = '__other__';
+  protected readonly maxImages = MAX_IMAGES;
 
-  protected readonly eventTypeOptions = [
-    'Dekoracja sali weselnej',
-    'Dekoracja plenerowego miejsca zaślubin',
-    'Bukiet Panny Młodej, Świadkowej, butonierki',
-    'Dekoracja urodzin',
-  ];
-
-  protected readonly decorationTypeOptions = ['Kompozycje niskie', 'Kompozycje wysokie', 'Kompozycje mieszane'];
-  protected readonly tableTypeOptions = ['Prostokątny', 'Okrągły'];
-  protected readonly mainTableSeatsOptions = ['Sami', 'ze Świadkami'];
-  protected readonly flowersTypeOptions = ['Naturalne', 'Sztuczne', 'Mieszane (naturalne i sztuczne)'];
+  protected readonly eventTypeOptions = EVENT_TYPE_OPTIONS;
+  protected readonly decorationTypeOptions = DECORATION_TYPE_OPTIONS;
+  protected readonly tableTypeOptions = TABLE_TYPE_OPTIONS;
+  protected readonly mainTableSeatsOptions = MAIN_TABLE_SEATS_OPTIONS;
+  protected readonly flowersTypeOptions = FLOWERS_TYPE_OPTIONS;
 
   private mainTableTypeField = this.createField();
   private mainTableSeatsField = this.createField();
