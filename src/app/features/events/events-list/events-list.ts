@@ -41,6 +41,23 @@ export class EventsList {
   private activeFilter = signal<EventFilter>({});
 
   ngOnInit(): void {
+    // Filters can arrive in the address, e.g. from the offer page linking to events on one date.
+    const params = this.route.snapshot.queryParamMap;
+    const fromAddress: EventFilter = {
+      dateFrom: params.get('dateFrom') ?? '',
+      dateTo: params.get('dateTo') ?? '',
+      client: params.get('client') ?? '',
+      venue: params.get('venue') ?? '',
+    };
+    if (Object.values(fromAddress).some((value) => value)) {
+      this.filterForm.setValue({
+        dateFrom: fromAddress.dateFrom ?? '',
+        dateTo: fromAddress.dateTo ?? '',
+        client: fromAddress.client ?? '',
+        venue: fromAddress.venue ?? '',
+      });
+      this.activeFilter.set(fromAddress);
+    }
     this.load(0);
   }
 

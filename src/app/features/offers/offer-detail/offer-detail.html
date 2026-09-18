@@ -92,7 +92,16 @@
           </div>
           <div class="field">
             <label class="field__label">Data eventu</label>
-            <div class="mono">{{ offer.eventDate }}</div>
+            <div class="mono">{{ offer.eventDate | appDate }}</div>
+            @if (sameDateEvents().length > 0) {
+              <div class="inline-alert">
+                <span class="material-symbols-outlined inline-alert__icon">event_busy</span>
+                <span class="inline-alert__text">{{ sameDateEventsLabel() }}</span>
+                <a class="btn btn-secondary btn-sm" routerLink="/events" [queryParams]="sameDateEventsFilter()">
+                  Zobacz eventy
+                </a>
+              </div>
+            }
           </div>
           <div class="field">
             <label class="field__label">E-mail</label>
@@ -250,14 +259,14 @@
         <div class="card__body">
           <div class="field">
             <label class="field__label">Cena (zł)</label>
-            <input class="input" type="number" step="0.01" formControlName="price" placeholder="np. 4500" />
+            <input class="input" type="number" step="0.01" formControlName="price" />
             @if (eventElements().length > 0) {
             }
           </div>
 
           <div class="field" style="margin-bottom: 0;">
             <label class="field__label">Komentarz</label>
-            <textarea class="textarea" formControlName="comment" placeholder="Uwagi wewnętrzne…"></textarea>
+            <textarea class="textarea" formControlName="comment"></textarea>
           </div>
         </div>
       </div>

@@ -11,6 +11,7 @@ import { ConfirmService } from '../../../core/services/confirm.service';
 import { Offer, OfferPdfOverrides } from '../../../core/models/offer.model';
 import { OfferImage } from '../../../core/models/offer-image.model';
 import { EventElement } from '../../../core/models/event-element.model';
+import { EventItem } from '../../../core/models/event.model';
 import { StatusBadge } from '../../../shared/components/status-badge/status-badge';
 import { ImageGallery } from '../../../shared/components/image-gallery/image-gallery';
 import { MultiselectDisplay } from '../../../shared/components/multiselect-display/multiselect-display';
@@ -72,6 +73,8 @@ export class OfferDetail {
   private confirm = inject(ConfirmService);
 
   protected offer = signal<Offer | null>(null);
+  /** Other events already booked for this offer's date — the event made from this offer doesn't count. */
+  protected sameDateEvents = signal<EventItem[]>([]);
   protected images = signal<OfferImage[]>([]);
   protected eventElements = signal<EventElement[]>([]);
   protected loading = signal(true);
@@ -121,10 +124,44 @@ export class OfferDetail {
           this.linkedEventId.set(event?.id ?? null);
         });
       }
+      this.loadSameDateEvents(offer);
       this.loading.set(false);
     });
     this.offerImageService.getByOfferId(id).subscribe((images) => this.images.set(images));
     this.eventElementService.getByOfferId(id).subscribe((elements) => this.eventElements.set(elements));
+  }
+
+  /** Date clash check: other events already booked for this offer's date. */
+  private loadSameDateEvents(offer: Offer): void {
+    if (!offer.eventDate) {
+      this.sameDateEvents.set([]);
+      return;
+    }
+    this.eventService
+      .getAll(0, 50, 'date,asc', { dateFrom: offer.eventDate, dateTo: offer.eventDate })
+      .subscribe((page) => {
+        // The event created from this very offer is not a clash with itself.
+        this.sameDateEvents.set(page.content.filter((event) => event.offerId !== offer.id));
+      });
+  }
+
+  /** Filter passed in the address, so the events list opens already narrowed to this date. */
+  sameDateEventsFilter(): Record<string, string> {
+    const date = this.offer()?.eventDate ?? '';
+    return { dateFrom: date, dateTo: date };
+  }
+
+  sameDateEventsLabel(): string {
+    const count = this.sameDateEvents().length;
+    if (count === 1) {
+      return 'W tym dniu jest już zaplanowany 1 event.';
+    }
+    const lastDigit = count % 10;
+    const lastTwoDigits = count % 100;
+    if (lastDigit >= 2 && lastDigit <= 4 && (lastTwoDigits < 12 || lastTwoDigits > 14)) {
+      return `W tym dniu są już zaplanowane ${count} eventy.`;
+    }
+    return `W tym dniu jest już zaplanowanych ${count} eventów.`;
   }
 
   toggleActionsMenu(): void {

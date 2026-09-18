@@ -498,6 +498,36 @@ table.table tbody tr.is-clickable:hover {
   transform: scale(1.08);
 }
 
+/* Inline warning with an action, e.g. other events on the same date */
+
+.inline-alert {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--color-warning) 35%, transparent);
+  border-radius: var(--radius-sm);
+  background: var(--color-warning-soft);
+  font-size: 0.82rem;
+  color: var(--color-text);
+}
+
+.inline-alert__icon {
+  flex-shrink: 0;
+  font-size: 1.15rem;
+  color: var(--color-warning);
+}
+
+.inline-alert__text {
+  min-width: 0;
+}
+
+.inline-alert .btn {
+  margin-left: auto;
+}
+
 /* Pricing table with drag-and-drop row reordering (Angular CDK) */
 
 /*
