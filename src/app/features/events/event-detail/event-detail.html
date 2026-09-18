@@ -6,7 +6,7 @@
       <div>
         <a routerLink="/events" class="text-muted" style="font-size:.82rem; text-decoration:none;">← Wróć do listy eventów</a>
         <h1 style="margin-top:.4rem">{{ event.clientPersonalData }}</h1>
-        <p class="page-header__subtitle">{{ event.venue }} · {{ event.date }}</p>
+        <p class="page-header__subtitle">{{ event.venue }} · {{ event.date | appDate }}</p>
       </div>
       <div class="page-actions">
         <button type="button" class="btn btn-danger" (click)="removeEvent()" [disabled]="deleting()">
@@ -155,7 +155,7 @@
               @for (work of works(); track work.id) {
                 <tr>
                   <td>{{ employeeName(work.employeeId) }}</td>
-                  <td class="mono">{{ work.workDate }}</td>
+                  <td class="mono">{{ work.workDate | appDate }}</td>
                   <td class="mono">{{ work.hoursWorked }} h</td>
                   <td>{{ work.description || '—' }}</td>
                   <td class="text-right">

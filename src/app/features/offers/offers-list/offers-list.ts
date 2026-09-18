@@ -10,10 +10,11 @@ import { Offer, OfferFilter } from '../../../core/models/offer.model';
 import { Paginator } from '../../../shared/components/paginator/paginator';
 import { StatusBadge } from '../../../shared/components/status-badge/status-badge';
 import { SortLabel } from '../../../shared/components/sort-label/sort-label';
+import { AppDatePipe } from '../../../shared/pipes/app-date.pipe';
 
 @Component({
   selector: 'app-offers-list',
-  imports: [Paginator, StatusBadge, DecimalPipe, ReactiveFormsModule, SortLabel],
+  imports: [Paginator, StatusBadge, DecimalPipe, ReactiveFormsModule, SortLabel, AppDatePipe],
   templateUrl: './offers-list.html',
   styleUrl: './offers-list.scss',
 })

@@ -40,7 +40,7 @@
                     <span class="badge badge--not-sent">Nieaktywny</span>
                   }
                 </td>
-                <td class="mono">{{ tenant.createdDate | date: 'yyyy-MM-dd' }}</td>
+                <td class="mono">{{ tenant.createdDate | appDate }}</td>
                 <td>
                   <div class="table-actions">
                     <button type="button" class="btn btn-secondary btn-sm" (click)="toggleActive(tenant)">

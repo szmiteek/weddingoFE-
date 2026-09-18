@@ -76,7 +76,7 @@
                   <div class="text-muted" style="font-size:.78rem">{{ event.email }}</div>
                 </td>
                 <td>{{ event.venue }}</td>
-                <td class="mono">{{ event.date }}</td>
+                <td class="mono">{{ event.date | appDate }}</td>
                 <td class="mono">{{ event.guests }}</td>
                 <td class="mono">{{ event.price | number: '1.2-2' }} zł</td>
                 <td class="text-right">

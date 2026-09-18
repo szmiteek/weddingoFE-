@@ -26,6 +26,7 @@ import {
   MAIN_TABLE_SEATS_OPTIONS,
   TABLE_TYPE_OPTIONS,
 } from '../../../core/models/offer-options';
+import { AppDatePipe } from '../../../shared/pipes/app-date.pipe';
 
 /** Same limit the backend enforces — an offer holds at most this many pictures. */
 const MAX_IMAGES = 5;
@@ -44,6 +45,7 @@ const MAX_IMAGES = 5;
     PdfPreviewModal,
     SendOfferModal,
     EventElementsTable,
+    AppDatePipe,
   ],
   templateUrl: './offer-detail.html',
   styleUrl: './offer-detail.scss',

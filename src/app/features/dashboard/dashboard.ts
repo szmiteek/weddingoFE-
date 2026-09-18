@@ -6,6 +6,7 @@ import { EventService } from '../../core/services/event.service';
 import { OfferService } from '../../core/services/offer.service';
 import { Offer } from '../../core/models/offer.model';
 import { StatusBadge } from '../../shared/components/status-badge/status-badge';
+import { AppDatePipe } from '../../shared/pipes/app-date.pipe';
 
 interface DashboardStats {
   employees: number;
@@ -16,7 +17,7 @@ interface DashboardStats {
 
 @Component({
   selector: 'app-dashboard',
-  imports: [RouterLink, StatusBadge],
+  imports: [RouterLink, StatusBadge, AppDatePipe],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
 })

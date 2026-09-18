@@ -1,13 +1,13 @@
 import { Component, inject, signal } from '@angular/core';
-import { DatePipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { TenantService } from '../../core/services/tenant.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { Tenant } from '../../core/models/auth.model';
+import { AppDatePipe } from '../../shared/pipes/app-date.pipe';
 
 @Component({
   selector: 'app-tenants',
-  imports: [ReactiveFormsModule, DatePipe],
+  imports: [ReactiveFormsModule, AppDatePipe],
   templateUrl: './tenants.html',
 })
 export class Tenants {

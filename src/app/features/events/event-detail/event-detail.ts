@@ -18,10 +18,11 @@ import { ImageGallery } from '../../../shared/components/image-gallery/image-gal
 import { EventElementsTable } from '../../offers/offer-detail/event-elements-table/event-elements-table';
 import { EventElementService } from '../../../core/services/event-element.service';
 import { EventElement } from '../../../core/models/event-element.model';
+import { AppDatePipe } from '../../../shared/pipes/app-date.pipe';
 
 @Component({
   selector: 'app-event-detail',
-  imports: [RouterLink, DecimalPipe, ReactiveFormsModule, EventWorkModal, ImageGallery, EventElementsTable],
+  imports: [RouterLink, DecimalPipe, ReactiveFormsModule, EventWorkModal, ImageGallery, EventElementsTable, AppDatePipe],
   templateUrl: './event-detail.html',
   styleUrl: './event-detail.scss',
 })

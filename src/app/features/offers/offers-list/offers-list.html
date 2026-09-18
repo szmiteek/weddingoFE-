@@ -81,13 +81,13 @@
           <tbody>
             @for (offer of offers(); track offer.id) {
               <tr class="is-clickable" (click)="goToDetail(offer)">
-                <td class="mono">{{ offer.createdDate }}</td>
+                <td class="mono">{{ offer.createdDate | appDate }}</td>
                 <td>
                   <div>{{ offer.personalData }}</div>
                   <div class="text-muted" style="font-size:.78rem">{{ offer.email }}</div>
                 </td>
                 <td>{{ offer.venue }}</td>
-                <td class="mono">{{ offer.eventDate }}</td>
+                <td class="mono">{{ offer.eventDate | appDate }}</td>
                 <td class="mono">{{ offer.budget | number: '1.0-0' }} zł</td>
                 <td><app-status-badge [status]="offer.status" /></td>
                 <td>

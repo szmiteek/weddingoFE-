@@ -1,22 +1,24 @@
 import { Component, inject, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { EventService } from '../../../core/services/event.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { ConfirmService } from '../../../core/services/confirm.service';
 import { EventFilter, EventItem } from '../../../core/models/event.model';
 import { Paginator } from '../../../shared/components/paginator/paginator';
 import { SortLabel } from '../../../shared/components/sort-label/sort-label';
+import { AppDatePipe } from '../../../shared/pipes/app-date.pipe';
 
 @Component({
   selector: 'app-events-list',
-  imports: [Paginator, DecimalPipe, SortLabel, ReactiveFormsModule],
+  imports: [Paginator, DecimalPipe, SortLabel, ReactiveFormsModule, AppDatePipe],
   templateUrl: './events-list.html',
   styleUrl: './events-list.scss',
 })
 export class EventsList {
   private eventService = inject(EventService);
+  private route = inject(ActivatedRoute);
   private router = inject(Router);
   private fb = inject(FormBuilder);
   private notifications = inject(NotificationService);

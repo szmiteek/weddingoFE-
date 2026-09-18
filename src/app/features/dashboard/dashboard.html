@@ -58,7 +58,7 @@
                 <tr class="is-clickable" [routerLink]="['/offers', offer.id]">
                   <td>{{ offer.personalData }}</td>
                   <td>{{ offer.venue }}</td>
-                  <td class="mono">{{ offer.eventDate }}</td>
+                  <td class="mono">{{ offer.eventDate | appDate }}</td>
                   <td><app-status-badge [status]="offer.status" /></td>
                 </tr>
               }
