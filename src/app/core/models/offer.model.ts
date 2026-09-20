@@ -14,6 +14,7 @@ export interface Offer {
   comment: string | null;
   status: OfferStatus;
   eventType: string[] | null;
+  afterWeddingParty: boolean;
   mainTableType: string | null;
   mainTableSeats: string | null;
   guestsTableType: string | null;
@@ -37,6 +38,7 @@ export interface OfferUpdateCommand {
   comment?: string;
   price?: number;
   eventType?: string[];
+  afterWeddingParty?: boolean;
   mainTableType?: string;
   mainTableSeats?: string;
   guestsTableType?: string;

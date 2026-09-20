@@ -135,6 +135,11 @@
         </div>
 
         <div class="field">
+          <label class="field__label">Poprawiny</label>
+          <div>{{ offer.afterWeddingParty ? 'Tak' : 'Nie' }}</div>
+        </div>
+
+        <div class="field">
           <label class="field__label">Typ stołu prezydialnego</label>
           <app-singleselect-display [options]="tableTypeOptions" [value]="offer.mainTableType" />
         </div>
@@ -167,7 +172,7 @@
             <div>{{ offer.colors || '—' }}</div>
           </div>
           <div class="field">
-            <label class="field__label">Przekąski na stole</label>
+            <label class="field__label">Przekąski na stołach</label>
             <div>{{ offer.appetizersOnTable ? 'Tak' : 'Nie' }}</div>
           </div>
         </div>
@@ -311,7 +316,12 @@
     </div>
 
     @if (pdfModalOpen()) {
-      <app-pdf-prepare-modal [offer]="offer" (close)="closePdfModal()" (generate)="generatePdf($event)" />
+      <app-pdf-prepare-modal
+        [offer]="offer"
+        [generating]="generatingPdf()"
+        (close)="closePdfModal()"
+        (generate)="generatePdf($event)"
+      />
     }
 
     @if (pdfPreview(); as pdf) {

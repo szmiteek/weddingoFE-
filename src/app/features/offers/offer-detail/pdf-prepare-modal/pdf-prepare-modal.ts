@@ -17,7 +17,7 @@ import { MultiselectDropdown } from '../../../../shared/components/multiselect-d
 import { SingleselectDropdown } from '../../../../shared/components/singleselect-dropdown/singleselect-dropdown';
 import { EventElementsTable } from '../event-elements-table/event-elements-table';
 
-type FieldKind = 'text' | 'email' | 'date' | 'number' | 'textarea' | 'single' | 'multi';
+type FieldKind = 'text' | 'email' | 'date' | 'number' | 'textarea' | 'single' | 'multi' | 'boolean';
 
 interface FieldDefinition {
   /** Offer property the field is read from and saved to. */
@@ -41,6 +41,7 @@ const FIELD_DEFINITIONS: Record<string, FieldDefinition> = {
   BUDGET: { property: 'budget', kind: 'number' },
   GUESTS: { property: 'guests', kind: 'number' },
   EVENT_TYPE: { property: 'eventType', kind: 'multi', options: EVENT_TYPE_OPTIONS },
+  AFTER_WEDDING_PARTY: { property: 'afterWeddingParty', kind: 'boolean' },
   DECORATION_TYPE: { property: 'decorationType', kind: 'multi', options: DECORATION_TYPE_OPTIONS },
   MAIN_TABLE_TYPE: { property: 'mainTableType', kind: 'single', options: TABLE_TYPE_OPTIONS },
   MAIN_TABLE_SEATS: { property: 'mainTableSeats', kind: 'single', options: MAIN_TABLE_SEATS_OPTIONS },
@@ -62,6 +63,8 @@ export class PdfPrepareModal {
   private notifications = inject(NotificationService);
 
   offer = input.required<Offer>();
+  /** Set by the parent while the PDF is being generated — the request outlives this modal's own saving state. */
+  generating = input(false);
 
   close = output<void>();
   generate = output<OfferPdfOverrides>();
@@ -71,6 +74,8 @@ export class PdfPrepareModal {
   /** Fields chosen in Ustawienia → Ustawienia oferty; null while loading. */
   protected fields = signal<PdfFormField[] | null>(null);
   protected saving = signal(false);
+  /** The save that „Generuj PDF” does first — kept apart from `saving`, so only one button shows progress. */
+  protected submitting = signal(false);
   /** A signed offer can't be edited any more — the modal then only generates the PDF. */
   protected readOnly = computed(() => this.offer().status === 'SIGNED');
 
@@ -115,6 +120,9 @@ export class PdfPrepareModal {
     if (field.kind === 'number') {
       return value ?? null;
     }
+    if (field.kind === 'boolean') {
+      return value ?? false;
+    }
     return value ?? '';
   }
 
@@ -134,8 +142,14 @@ export class PdfPrepareModal {
     this.step.set(1);
   }
 
+  /** Any request in flight — the save behind „Zapisz”, the one behind „Generuj PDF”, or the generating itself. */
+  protected busy = computed(() => this.saving() || this.submitting() || this.generating());
+
+  /** True from the click on „Generuj PDF” until the PDF is back — the save before it counts as generating. */
+  protected showGenerating = computed(() => this.submitting() || this.generating());
+
   canSave(): boolean {
-    return !this.readOnly() && !this.saving() && this.form.valid && (this.form.dirty || this.pricingForm.dirty);
+    return !this.readOnly() && !this.busy() && this.form.valid && (this.form.dirty || this.pricingForm.dirty);
   }
 
   save(): void {
@@ -154,17 +168,17 @@ export class PdfPrepareModal {
 
   /** Generating always saves first, so the offer and its PDF never disagree. */
   submit(): void {
-    if (this.saving() || this.form.invalid) {
+    if (this.busy() || this.form.invalid) {
       return;
     }
-    this.saving.set(true);
+    this.submitting.set(true);
     this.persist().subscribe({
       next: () => {
-        this.saving.set(false);
+        this.submitting.set(false);
         // Fields come from the offer that was just saved; only the description is passed along explicitly.
         this.generate.emit({ fields: {}, decorationDescription: this.pricingForm.getRawValue().description });
       },
-      error: () => this.saving.set(false),
+      error: () => this.submitting.set(false),
     });
   }
 

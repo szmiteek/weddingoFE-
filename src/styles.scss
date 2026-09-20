@@ -729,6 +729,14 @@ table.pricing-table {
   animation: spin 0.7s linear infinite;
 }
 
+/* Inside a button — small, and drawn in the button's own text colour. */
+.spinner--btn {
+  width: 1em;
+  height: 1em;
+  border-width: 2px;
+  border-color: currentColor transparent transparent currentColor;
+}
+
 @keyframes spin {
   to {
     transform: rotate(360deg);
@@ -839,6 +847,26 @@ table.pricing-table {
 
 .modal-panel--pricing {
   max-width: 62rem;
+}
+
+/* Nagłówek, kroki i stopka z guzikami stoją w miejscu — przewija się tylko .modal-body. */
+.modal-panel--scroll-body {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.modal-panel--scroll-body > .modal-header,
+.modal-panel--scroll-body > .wizard-steps,
+.modal-panel--scroll-body > .modal-footer {
+  flex-shrink: 0;
+}
+
+.modal-panel--scroll-body > .modal-body {
+  flex: 1;
+  overflow-y: auto;
+  /* Bez tego element flexa nie zejdzie poniżej wysokości swojej zawartości i przewijałby się cały panel. */
+  min-height: 0;
 }
 
 .wizard-steps {

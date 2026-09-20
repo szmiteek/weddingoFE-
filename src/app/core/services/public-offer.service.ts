@@ -28,6 +28,7 @@ export class PublicOfferService {
     if (command.budget != null) formData.append('budget', String(command.budget));
     if (command.guests != null) formData.append('guests', String(command.guests));
     command.eventType.forEach((value) => formData.append('eventType', value));
+    if (command.afterWeddingParty != null) formData.append('afterWeddingParty', String(command.afterWeddingParty));
     command.decorationType.forEach((value) => formData.append('decorationType', value));
     formData.append('colors', command.colors);
     formData.append('description', command.description);

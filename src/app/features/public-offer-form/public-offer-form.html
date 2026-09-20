@@ -104,9 +104,49 @@
                   {{ option }}
                 </label>
               }
+              <label class="checklist__item">
+                <input type="checkbox" [checked]="eventTypeOther()" (change)="toggleEventTypeOther()" />
+                Inne
+              </label>
             </div>
-            @if (submitAttempted() && selectedEventTypes().length === 0) {
+            @if (eventTypeOther()) {
+              <input
+                class="input"
+                style="margin-top: .5rem;"
+                [value]="eventTypeCustom()"
+                (input)="eventTypeCustom.set($any($event.target).value)"
+                placeholder="Podaj jakie"
+              />
+            }
+            @if (submitAttempted() && eventTypes().length === 0) {
               <span class="field__error">Wybierz co najmniej jedną opcję.</span>
+            }
+          </div>
+
+          <div class="field">
+            <label class="field__label">Poprawiny</label>
+            <div class="checklist">
+              <label class="checklist__item">
+                <input
+                  type="radio"
+                  name="afterWeddingParty"
+                  [checked]="afterWeddingParty() === true"
+                  (change)="afterWeddingParty.set(true)"
+                />
+                Tak
+              </label>
+              <label class="checklist__item">
+                <input
+                  type="radio"
+                  name="afterWeddingParty"
+                  [checked]="afterWeddingParty() === false"
+                  (change)="afterWeddingParty.set(false)"
+                />
+                Nie
+              </label>
+            </div>
+            @if (submitAttempted() && afterWeddingParty() === null) {
+              <span class="field__error">Wybierz jedną z opcji.</span>
             }
           </div>
 
@@ -170,7 +210,7 @@
           }
 
           <div class="field">
-            <label class="field__label">Przekąski na stole</label>
+            <label class="field__label">Przekąski na stołach</label>
             <div class="checklist">
               <label class="checklist__item">
                 <input

@@ -73,6 +73,11 @@ export class PublicOfferForm {
   protected submitted = signal(false);
 
   protected selectedEventTypes = signal<string[]>([]);
+  /** "Inne" works like in the single-select fields: it reveals a box for the client's own answer. */
+  protected eventTypeOther = signal(false);
+  protected eventTypeCustom = signal('');
+  /** Yes/no question — null until answered, so an unanswered form can't quietly submit "no". */
+  protected afterWeddingParty = signal<boolean | null>(null);
   protected selectedDecorationTypes = signal<string[]>([]);
   /** Yes/no question — null until answered, so an unanswered form can't quietly submit "no". */
   protected appetizersOnTable = signal<boolean | null>(null);
@@ -133,10 +138,21 @@ export class PublicOfferForm {
     return this.singleSelectFields.every((item) => this.finalValue(item.field).length > 0);
   }
 
+  /** Chosen options plus the client's own answer — it is stored as just another value on the list. */
+  eventTypes(): string[] {
+    const custom = this.eventTypeCustom().trim();
+    return this.eventTypeOther() && custom ? [...this.selectedEventTypes(), custom] : this.selectedEventTypes();
+  }
+
+  toggleEventTypeOther(): void {
+    this.eventTypeOther.update((checked) => !checked);
+  }
+
   canSubmit(): boolean {
     return (
       this.form.valid &&
-      this.selectedEventTypes().length > 0 &&
+      this.eventTypes().length > 0 &&
+      this.afterWeddingParty() !== null &&
       this.selectedDecorationTypes().length > 0 &&
       this.allSingleSelectsFilled() &&
       this.appetizersOnTable() !== null &&
@@ -200,7 +216,8 @@ export class PublicOfferForm {
           eventDate: value.eventDate || null,
           budget: value.budget,
           guests: value.guests,
-          eventType: this.selectedEventTypes(),
+          eventType: this.eventTypes(),
+          afterWeddingParty: this.afterWeddingParty(),
           decorationType: this.selectedDecorationTypes(),
           colors: value.colors,
           description: value.description,

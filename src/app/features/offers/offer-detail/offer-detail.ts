@@ -84,6 +84,8 @@ export class OfferDetail {
   /** The PDF shown in the preview window — freshly generated or the one saved with the offer. */
   protected pdfPreview = signal<Blob | null>(null);
   protected loadingPdfPreview = signal(false);
+  /** Generating outlives the modal's own saving state, so the modal gets it as an input. */
+  protected generatingPdf = signal(false);
   protected priceEditMode = signal(false);
   protected decorationEditMode = signal(false);
   protected savingDecoration = signal(false);
@@ -231,13 +233,19 @@ export class OfferDetail {
 
   generatePdf(overrides: OfferPdfOverrides): void {
     const offer = this.offer();
-    if (!offer) {
+    if (!offer || this.generatingPdf()) {
       return;
     }
-    this.offerService.generatePdf(offer.id, overrides).subscribe((blob) => {
-      this.closePdfModal();
-      // Straight into the preview — no extra request, and the file is right there to check.
-      this.pdfPreview.set(blob);
+    this.generatingPdf.set(true);
+    this.offerService.generatePdf(offer.id, overrides).subscribe({
+      next: (blob) => {
+        this.generatingPdf.set(false);
+        this.closePdfModal();
+        // Straight into the preview — no extra request, and the file is right there to check.
+        this.pdfPreview.set(blob);
+      },
+      // The modal stays open on failure, so the wycena isn't lost and generating can be retried.
+      error: () => this.generatingPdf.set(false),
     });
   }
 

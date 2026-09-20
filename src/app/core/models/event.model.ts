@@ -10,6 +10,7 @@ export interface EventItem {
   price: number;
   comment: string;
   decorationDescription: string | null;
+  afterWeddingParty: boolean;
   offerId: number;
 }
 

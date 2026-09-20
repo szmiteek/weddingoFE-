@@ -1,8 +1,13 @@
 <div class="modal-backdrop">
-  <div class="modal-panel modal-panel--wide" [class.modal-panel--pricing]="step() === 2">
+  <div
+    class="modal-panel modal-panel--wide modal-panel--scroll-body"
+    [class.modal-panel--pricing]="step() === 2"
+  >
     <div class="modal-header">
       <h2>Przygotuj ofertę PDF</h2>
-      <button type="button" class="modal-close" (click)="close.emit()" aria-label="Zamknij">✕</button>
+      <button type="button" class="modal-close" (click)="close.emit()" [disabled]="showGenerating()" aria-label="Zamknij">
+        ✕
+      </button>
     </div>
 
     <div class="wizard-steps">
@@ -18,68 +23,70 @@
     </div>
 
     @if (step() === 1) {
-      <div [formGroup]="form">
-        <div class="modal-body">
-          @if (fields(); as fields) {
-            <div class="form-grid">
-              @for (field of fields; track field.key) {
-                <div class="field" [style.grid-column]="field.kind === 'textarea' ? '1 / -1' : null">
-                  <label class="field__label" [for]="'pdf-field-' + field.key">{{ field.label }}</label>
-                  @switch (field.kind) {
-                    @case ('textarea') {
-                      <textarea class="textarea" rows="4" [id]="'pdf-field-' + field.key" [formControlName]="field.key"></textarea>
-                    }
-                    @case ('single') {
-                      <app-singleselect-dropdown
-                        [options]="field.options ?? []"
-                        [selectId]="'pdf-field-' + field.key"
-                        [formControlName]="field.key"
-                      />
-                    }
-                    @case ('multi') {
-                      <app-multiselect-dropdown
-                        [options]="field.options ?? []"
-                        [triggerId]="'pdf-field-' + field.key"
-                        [formControlName]="field.key"
-                      />
-                    }
-                    @case ('date') {
-                      <input class="input" type="date" [id]="'pdf-field-' + field.key" [formControlName]="field.key" />
-                    }
-                    @case ('number') {
-                      <input class="input" type="number" min="0" [id]="'pdf-field-' + field.key" [formControlName]="field.key" />
-                    }
-                    @case ('email') {
-                      <input
-                        class="input"
-                        type="email"
-                        [id]="'pdf-field-' + field.key"
-                        [formControlName]="field.key"
-                        [class.is-invalid]="form.get(field.key)?.invalid"
-                      />
-                      @if (form.get(field.key)?.invalid) {
-                        <span class="field__error">Podaj poprawny adres e-mail.</span>
-                      }
-                    }
-                    @default {
-                      <input class="input" [id]="'pdf-field-' + field.key" [formControlName]="field.key" />
+      <!-- formGroup sits on .modal-body itself: it has to stay a direct child of the panel, or it can't be the part that scrolls. -->
+      <div class="modal-body" [formGroup]="form">
+        @if (fields(); as fields) {
+          <div class="form-grid">
+            @for (field of fields; track field.key) {
+              <div class="field" [style.grid-column]="field.kind === 'textarea' ? '1 / -1' : null">
+                <label class="field__label" [for]="'pdf-field-' + field.key">{{ field.label }}</label>
+                @switch (field.kind) {
+                  @case ('textarea') {
+                    <textarea class="textarea" rows="4" [id]="'pdf-field-' + field.key" [formControlName]="field.key"></textarea>
+                  }
+                  @case ('single') {
+                    <app-singleselect-dropdown
+                      [options]="field.options ?? []"
+                      [selectId]="'pdf-field-' + field.key"
+                      [formControlName]="field.key"
+                    />
+                  }
+                  @case ('multi') {
+                    <app-multiselect-dropdown
+                      [options]="field.options ?? []"
+                      [triggerId]="'pdf-field-' + field.key"
+                      [formControlName]="field.key"
+                    />
+                  }
+                  @case ('boolean') {
+                    <select class="input" [id]="'pdf-field-' + field.key" [formControlName]="field.key">
+                      <option [ngValue]="true">Tak</option>
+                      <option [ngValue]="false">Nie</option>
+                    </select>
+                  }
+                  @case ('date') {
+                    <input class="input" type="date" [id]="'pdf-field-' + field.key" [formControlName]="field.key" />
+                  }
+                  @case ('number') {
+                    <input class="input" type="number" min="0" [id]="'pdf-field-' + field.key" [formControlName]="field.key" />
+                  }
+                  @case ('email') {
+                    <input
+                      class="input"
+                      type="email"
+                      [id]="'pdf-field-' + field.key"
+                      [formControlName]="field.key"
+                      [class.is-invalid]="form.get(field.key)?.invalid"
+                    />
+                    @if (form.get(field.key)?.invalid) {
+                      <span class="field__error">Podaj poprawny adres e-mail.</span>
                     }
                   }
-                </div>
-              }
-            </div>
-            <p class="field__hint" style="margin: 0;">
-              @if (readOnly()) {
-                Oferta jest podpisana, więc jej danych nie można już zmieniać.
-              } @else {
-                Zmiany zapiszesz w ofercie przyciskiem „Zapisz” albo razem z wygenerowaniem PDF-a. Pola wybierzesz w
-                Ustawienia → Ustawienia oferty.
-              }
-            </p>
-          } @else {
-            <p class="text-muted">Wczytywanie pól…</p>
-          }
-        </div>
+                  @default {
+                    <input class="input" [id]="'pdf-field-' + field.key" [formControlName]="field.key" />
+                  }
+                }
+              </div>
+            }
+          </div>
+          <p class="field__hint" style="margin: 0;">
+            @if (readOnly()) {
+              Oferta jest podpisana, więc jej danych nie można już zmieniać.
+            }
+          </p>
+        } @else {
+          <p class="text-muted">Wczytywanie pól…</p>
+        }
       </div>
 
       <div class="modal-footer">
@@ -100,7 +107,7 @@
             <app-event-elements-table
               [offerId]="offer().id"
               [elements]="elements()"
-              [readOnly]="readOnly()"
+              [readOnly]="readOnly() || showGenerating()"
               (changed)="onElementsChanged($event)"
             />
           </div>
@@ -109,22 +116,33 @@
             <div class="field">
               <label class="field__label">Opis dekoracji</label>
               <textarea class="textarea" rows="6" formControlName="description"></textarea>
-              <span class="field__hint">Zapisze się w ofercie przyciskiem „Zapisz” albo razem z wygenerowaniem PDF-a.</span>
             </div>
           </div>
         </div>
       </div>
 
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" (click)="previousStep()">Wstecz</button>
+        <button type="button" class="btn btn-secondary" (click)="previousStep()" [disabled]="showGenerating()">
+          Wstecz
+        </button>
         @if (!readOnly()) {
           <button type="button" class="btn btn-outline" (click)="save()" [disabled]="!canSave()">
             {{ saving() ? 'Zapisywanie…' : 'Zapisz' }}
           </button>
         }
-        <button type="button" class="btn btn-primary" (click)="submit()" [disabled]="saving() || form.invalid">
-          <span class="material-symbols-outlined">picture_as_pdf</span>
-          Generuj PDF
+        <button
+          type="button"
+          class="btn btn-primary"
+          (click)="submit()"
+          [disabled]="busy() || form.invalid"
+        >
+          @if (showGenerating()) {
+            <span class="spinner spinner--btn"></span>
+            Generowanie…
+          } @else {
+            <span class="material-symbols-outlined">picture_as_pdf</span>
+            Generuj PDF
+          }
         </button>
       </div>
     }

@@ -19,6 +19,7 @@ const FIELD_LABELS: Record<string, string> = {
   colors: 'Kolorystyka',
   description: 'Opis',
   eventType: 'Rodzaj wydarzenia',
+  afterWeddingParty: 'Poprawiny',
   decorationType: 'Rodzaj kompozycji',
   mainTableType: 'Typ stołu prezydialnego',
   mainTableSeats: 'Przy stole prezydialnym będziemy siedzieć',

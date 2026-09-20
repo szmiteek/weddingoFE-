@@ -13,6 +13,7 @@ export interface PublicOfferCommand {
   budget: number | null;
   guests: number | null;
   eventType: string[];
+  afterWeddingParty: boolean | null;
   decorationType: string[];
   colors: string;
   description: string;
