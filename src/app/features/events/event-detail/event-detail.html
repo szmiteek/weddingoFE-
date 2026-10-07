@@ -9,6 +9,12 @@
         <p class="page-header__subtitle">{{ event.venue }} · {{ event.date | appDate }}</p>
       </div>
       <div class="page-actions">
+        @if (event.offerId) {
+          <a class="btn btn-secondary" [routerLink]="['/offers', event.offerId]">
+            <span class="material-symbols-outlined">description</span>
+            Pokaż powiązaną ofertę
+          </a>
+        }
         <button type="button" class="btn btn-danger" (click)="removeEvent()" [disabled]="deleting()">
           <span class="material-symbols-outlined">delete</span>
           {{ deleting() ? 'Usuwanie…' : 'Usuń event' }}
@@ -41,31 +47,43 @@
 
     <div class="card" style="margin-bottom: 1.5rem;">
       <div class="card__header">
-        <h2>Dane klienta</h2>
+        <h2>Dane eventu</h2>
       </div>
-      <div class="card__body form-grid">
-        <div>
-          <div class="field__label" style="margin-bottom:.25rem">Budżet</div>
-          <div>{{ event.budget }} zł</div>
-        </div>
-        <div>
-          <div class="field__label" style="margin-bottom:.25rem">E-mail</div>
-          <div>{{ event.email }}</div>
-        </div>
-        <div>
-          <div class="field__label" style="margin-bottom:.25rem">Telefon</div>
-          <div>{{ event.phone }}</div>
-        </div>
-        <div>
-          <div class="field__label" style="margin-bottom:.25rem">ID powiązanej oferty</div>
-          <div><a [routerLink]="['/offers', event.offerId]">#{{ event.offerId }}</a></div>
-        </div>
-        @if (event.comment) {
-          <div style="grid-column: 1 / -1;">
-            <div class="field__label" style="margin-bottom:.25rem">Komentarz</div>
-            <div>{{ event.comment }}</div>
+      <div class="card__body">
+        <div class="form-grid">
+          <div class="field">
+            <label class="field__label">Dane klienta</label>
+            <div>{{ event.clientPersonalData }}</div>
           </div>
-        }
+          <div class="field">
+            <label class="field__label">Miejsce</label>
+            <div>{{ event.venue }}</div>
+          </div>
+          <div class="field">
+            <label class="field__label">Data eventu</label>
+            <div class="mono">{{ event.date | appDate }}</div>
+          </div>
+          <div class="field">
+            <label class="field__label">E-mail</label>
+            <div>{{ event.email }}</div>
+          </div>
+          <div class="field">
+            <label class="field__label">Telefon</label>
+            <div>{{ event.phone }}</div>
+          </div>
+          <div class="field">
+            <label class="field__label">Budżet (zł)</label>
+            <div class="mono">{{ event.budget | number: '1.0-0' }} zł</div>
+          </div>
+          <div class="field">
+            <label class="field__label">Liczba gości</label>
+            <div class="mono">{{ event.guests }}</div>
+          </div>
+          <div class="field">
+            <label class="field__label">Cena (zł)</label>
+            <div class="mono">{{ event.price | number: '1.2-2' }} zł</div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -92,7 +110,7 @@
                 Anuluj
               </button>
               @if (pricingForm.dirty) {
-                <button type="submit" class="btn btn-primary btn-sm" [disabled]="savingPricing()">
+                <button type="submit" class="btn btn-primary btn-sm" [disabled]="!canSavePricing()">
                   {{ savingPricing() ? 'Zapisywanie…' : 'Zapisz' }}
                 </button>
               }
@@ -106,6 +124,29 @@
             <input class="input" type="number" step="0.01" formControlName="price" placeholder="np. 4500" />
             @if (eventElements().length > 0) {
               <span class="field__hint">Uwaga: zostanie nadpisana przy kolejnej edycji wycenionych elementów.</span>
+            }
+          </div>
+
+          <div class="field">
+            <label class="switch">
+              <input type="checkbox" formControlName="depositPaid" />
+              <span class="switch__track"></span>
+              <span>Zaliczka zapłacona</span>
+            </label>
+            @if (pricingForm.controls.depositPaid.value) {
+              <input
+                class="input"
+                type="number"
+                step="0.01"
+                min="0"
+                formControlName="depositAmount"
+                placeholder="np. 1500"
+                style="margin-top: 0.6rem;"
+                [class.is-invalid]="pricingEditMode() && !canSavePricing()"
+              />
+              @if (pricingEditMode() && !canSavePricing()) {
+                <span class="field__error">Podaj kwotę zaliczki większą od zera.</span>
+              }
             }
           </div>
 

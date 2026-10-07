@@ -32,13 +32,20 @@
                 <label class="field__label" [for]="'pdf-field-' + field.key">{{ field.label }}</label>
                 @switch (field.kind) {
                   @case ('textarea') {
-                    <textarea class="textarea" rows="4" [id]="'pdf-field-' + field.key" [formControlName]="field.key"></textarea>
+                    <textarea
+                      class="textarea"
+                      rows="4"
+                      [id]="'pdf-field-' + field.key"
+                      [formControlName]="field.key"
+                      [class.is-invalid]="showsError(field)"
+                    ></textarea>
                   }
                   @case ('single') {
                     <app-singleselect-dropdown
                       [options]="field.options ?? []"
                       [selectId]="'pdf-field-' + field.key"
                       [formControlName]="field.key"
+                      [invalid]="showsError(field)"
                     />
                   }
                   @case ('multi') {
@@ -46,6 +53,7 @@
                       [options]="field.options ?? []"
                       [triggerId]="'pdf-field-' + field.key"
                       [formControlName]="field.key"
+                      [invalid]="showsError(field)"
                     />
                   }
                   @case ('boolean') {
@@ -55,10 +63,23 @@
                     </select>
                   }
                   @case ('date') {
-                    <input class="input" type="date" [id]="'pdf-field-' + field.key" [formControlName]="field.key" />
+                    <input
+                      class="input"
+                      type="date"
+                      [id]="'pdf-field-' + field.key"
+                      [formControlName]="field.key"
+                      [class.is-invalid]="showsError(field)"
+                    />
                   }
                   @case ('number') {
-                    <input class="input" type="number" min="0" [id]="'pdf-field-' + field.key" [formControlName]="field.key" />
+                    <input
+                      class="input"
+                      type="number"
+                      min="0"
+                      [id]="'pdf-field-' + field.key"
+                      [formControlName]="field.key"
+                      [class.is-invalid]="showsError(field)"
+                    />
                   }
                   @case ('email') {
                     <input
@@ -66,15 +87,20 @@
                       type="email"
                       [id]="'pdf-field-' + field.key"
                       [formControlName]="field.key"
-                      [class.is-invalid]="form.get(field.key)?.invalid"
+                      [class.is-invalid]="showsError(field)"
                     />
-                    @if (form.get(field.key)?.invalid) {
-                      <span class="field__error">Podaj poprawny adres e-mail.</span>
-                    }
                   }
                   @default {
-                    <input class="input" [id]="'pdf-field-' + field.key" [formControlName]="field.key" />
+                    <input
+                      class="input"
+                      [id]="'pdf-field-' + field.key"
+                      [formControlName]="field.key"
+                      [class.is-invalid]="showsError(field)"
+                    />
                   }
+                }
+                @if (showsError(field)) {
+                  <span class="field__error">{{ errorFor(field) }}</span>
                 }
               </div>
             }
@@ -122,6 +148,11 @@
       </div>
 
       <div class="modal-footer">
+        @if (pdfBlockers(); as blockers) {
+          @if (blockers.length > 0) {
+            <span class="field__error modal-footer__note">Do wygenerowania PDF-a brakuje: {{ blockers.join(', ') }}.</span>
+          }
+        }
         <button type="button" class="btn btn-secondary" (click)="previousStep()" [disabled]="showGenerating()">
           Wstecz
         </button>
@@ -134,7 +165,7 @@
           type="button"
           class="btn btn-primary"
           (click)="submit()"
-          [disabled]="busy() || form.invalid"
+          [disabled]="!canGenerate()"
         >
           @if (showGenerating()) {
             <span class="spinner spinner--btn"></span>

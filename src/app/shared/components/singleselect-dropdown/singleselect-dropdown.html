@@ -1,5 +1,6 @@
 <select
   class="select"
+  [class.is-invalid]="invalid()"
   [id]="selectId()"
   [disabled]="disabled()"
   (change)="select($any($event.target).value)"

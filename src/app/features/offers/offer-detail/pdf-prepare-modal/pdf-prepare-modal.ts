@@ -1,5 +1,12 @@
 import { Component, computed, inject, input, output, signal } from '@angular/core';
-import { AbstractControl, FormBuilder, FormRecord, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  AbstractControl,
+  FormBuilder,
+  FormRecord,
+  ReactiveFormsModule,
+  ValidatorFn,
+  Validators,
+} from '@angular/forms';
 import { Observable, of, tap } from 'rxjs';
 import { Offer, OfferPdfOverrides, OfferUpdateCommand } from '../../../../core/models/offer.model';
 import { EventElement } from '../../../../core/models/event-element.model';
@@ -99,17 +106,21 @@ export class PdfPrepareModal {
         return definition ? [{ ...definition, key: field.key, label: field.label }] : [];
       });
       for (const field of fields) {
-        this.form.addControl(
-          field.key,
-          this.fb.control(this.initialValue(offer, field), field.kind === 'email' ? Validators.email : null),
-        );
+        this.form.addControl(field.key, this.fb.control(this.initialValue(offer, field), this.validatorsFor(field)));
       }
       if (this.readOnly()) {
         this.form.disable();
       }
+      // Values come from the offer, not from typing, so gaps have to show up the moment the modal opens.
+      this.form.markAllAsTouched();
       this.fields.set(fields);
     });
     this.loadElements();
+  }
+
+  /** Every chosen field lands in the PDF, so an empty one would print a blank line in the offer. */
+  private validatorsFor(field: PdfFormField): ValidatorFn[] {
+    return field.kind === 'email' ? [Validators.required, Validators.email] : [Validators.required];
   }
 
   private initialValue(offer: Offer, field: PdfFormField): unknown {
@@ -148,6 +159,39 @@ export class PdfPrepareModal {
   /** True from the click on „Generuj PDF” until the PDF is back — the save before it counts as generating. */
   protected showGenerating = computed(() => this.submitting() || this.generating());
 
+  protected showsError(field: PdfFormField): boolean {
+    const control = this.form.get(field.key);
+    return !!control && control.invalid && control.touched;
+  }
+
+  protected errorFor(field: PdfFormField): string {
+    return this.form.get(field.key)?.hasError('email') ? 'Podaj poprawny adres e-mail.' : 'To pole jest wymagane.';
+  }
+
+  /** Step-1 fields that are still empty, or filled in wrong (a broken e-mail). */
+  protected invalidFieldLabels(): string[] {
+    return (this.fields() ?? []).filter((field) => this.form.get(field.key)?.invalid).map((field) => field.label);
+  }
+
+  /** What still stands between the offer and its PDF. A signed offer can't be edited, so nothing blocks it there. */
+  protected pdfBlockers(): string[] {
+    if (this.readOnly()) {
+      return [];
+    }
+    const blockers = this.invalidFieldLabels();
+    if (!this.pricingForm.getRawValue().description.trim()) {
+      blockers.push('opis dekoracji');
+    }
+    if (this.elements().length === 0) {
+      blockers.push('co najmniej jeden element wyceny');
+    }
+    return blockers;
+  }
+
+  protected canGenerate(): boolean {
+    return !this.busy() && this.fields() !== null && this.pdfBlockers().length === 0;
+  }
+
   canSave(): boolean {
     return !this.readOnly() && !this.busy() && this.form.valid && (this.form.dirty || this.pricingForm.dirty);
   }
@@ -168,7 +212,7 @@ export class PdfPrepareModal {
 
   /** Generating always saves first, so the offer and its PDF never disagree. */
   submit(): void {
-    if (this.busy() || this.form.invalid) {
+    if (!this.canGenerate()) {
       return;
     }
     this.submitting.set(true);

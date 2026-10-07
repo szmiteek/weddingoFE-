@@ -52,6 +52,8 @@ export class EventDetail {
 
   protected pricingForm = this.fb.nonNullable.group({
     price: this.fb.control<number | null>(null),
+    depositPaid: [false],
+    depositAmount: this.fb.control<number | null>(null),
     comment: [''],
   });
 
@@ -85,7 +87,7 @@ export class EventDetail {
       this.event.set(event);
       this.works.set(works);
       this.employees.set(employees.content);
-      this.pricingForm.setValue({ price: event.price, comment: event.comment ?? '' });
+      this.pricingForm.setValue(this.pricingValues(event));
       this.pricingForm.disable();
       this.pricingEditMode.set(false);
       this.loading.set(false);
@@ -156,10 +158,26 @@ export class EventDetail {
     this.pricingEditMode.set(true);
   }
 
+  /** Switch nie ma własnego pola w API — bierze się z tego, czy jest kwota zaliczki. */
+  private pricingValues(event: EventItem): ReturnType<typeof this.pricingForm.getRawValue> {
+    return {
+      price: event.price,
+      depositPaid: event.depositAmount != null,
+      depositAmount: event.depositAmount,
+      comment: event.comment ?? '',
+    };
+  }
+
+  /** Zapis jest zablokowany, dopóki włączony switch nie ma sensownej kwoty. */
+  canSavePricing(): boolean {
+    const value = this.pricingForm.getRawValue();
+    return !this.savingPricing() && (!value.depositPaid || (value.depositAmount ?? 0) > 0);
+  }
+
   cancelPricingEdit(): void {
     const event = this.event();
     if (event) {
-      this.pricingForm.patchValue({ price: event.price, comment: event.comment ?? '' });
+      this.pricingForm.patchValue(this.pricingValues(event));
     }
     this.pricingForm.markAsPristine();
     this.pricingForm.disable();
@@ -171,10 +189,18 @@ export class EventDetail {
     if (!event) {
       return;
     }
+    if (!this.canSavePricing()) {
+      return;
+    }
     const value = this.pricingForm.getRawValue();
     this.savingPricing.set(true);
     this.eventService
-      .update(event.id, { price: value.price ?? undefined, comment: value.comment })
+      .update(event.id, {
+        price: value.price ?? undefined,
+        depositPaid: value.depositPaid,
+        depositAmount: value.depositPaid ? value.depositAmount : null,
+        comment: value.comment,
+      })
       .subscribe({
         next: (updated) => {
           this.event.set(updated);

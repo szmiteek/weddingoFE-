@@ -17,6 +17,8 @@ export class MultiselectDropdown implements ControlValueAccessor {
   options = input<string[]>([]);
   placeholder = input('Wybierz…');
   triggerId = input<string | null>(null);
+  /** Red border like on a plain input — the form decides, the control only shows it. */
+  invalid = input(false);
 
   private trigger = viewChild.required<ElementRef<HTMLButtonElement>>('trigger');
 

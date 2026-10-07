@@ -15,6 +15,8 @@ export class SingleselectDropdown implements ControlValueAccessor {
   options = input<string[]>([]);
   otherLabel = input('Inny');
   selectId = input<string | null>(null);
+  /** Red border like on a plain input — the form decides, the control only shows it. */
+  invalid = input(false);
 
   protected readonly OTHER = '__other__';
   protected value = signal('');

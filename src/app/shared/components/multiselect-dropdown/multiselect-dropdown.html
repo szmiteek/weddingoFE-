@@ -4,6 +4,7 @@
   cdkOverlayOrigin
   type="button"
   class="select multiselect-dropdown__trigger"
+  [class.is-invalid]="invalid()"
   [id]="triggerId()"
   [disabled]="disabled()"
   aria-haspopup="listbox"

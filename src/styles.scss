@@ -168,6 +168,8 @@ button {
   cursor: pointer;
   transition: transform 0.12s ease, background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
   white-space: nowrap;
+  /* Klasa bywa zakladana na <a> — bez tego link wyglada jak przycisk z podkreslonym napisem. */
+  text-decoration: none;
 }
 
 .btn:disabled {
@@ -309,8 +311,68 @@ button {
 }
 
 .input.is-invalid,
-.select.is-invalid {
+.select.is-invalid,
+.textarea.is-invalid {
   border-color: var(--color-danger);
+}
+
+/* Przelacznik tak/nie: zwykly checkbox schowany pod wlasna warstwa wizualna, wiec dziala z formularzem jak kazdy inny. */
+.switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.switch input {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+}
+
+.switch__track {
+  position: relative;
+  flex-shrink: 0;
+  width: 2.4rem;
+  height: 1.35rem;
+  border-radius: 999px;
+  background: var(--color-border);
+  transition: background-color 0.15s ease;
+}
+
+.switch__track::after {
+  content: '';
+  position: absolute;
+  top: 0.175rem;
+  left: 0.175rem;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.15s ease;
+}
+
+.switch input:checked + .switch__track {
+  background: var(--color-primary);
+}
+
+.switch input:checked + .switch__track::after {
+  transform: translateX(1.05rem);
+}
+
+.switch input:focus-visible + .switch__track {
+  box-shadow: 0 0 0 3px var(--color-primary-soft);
+}
+
+.switch input:disabled + .switch__track {
+  opacity: 0.55;
+}
+
+.switch:has(input:disabled) {
+  cursor: default;
 }
 
 .input:disabled,
@@ -979,6 +1041,13 @@ table.pricing-table {
   border-top: 1px solid var(--color-border);
   margin-top: 0.5rem;
   padding-top: 1.25rem;
+}
+
+/* Wyjasnienie przy zablokowanym przycisku: zostaje po lewej, guziki dalej trzymaja sie prawej krawedzi. */
+.modal-footer__note {
+  margin-right: auto;
+  text-align: left;
+  max-width: 28rem;
 }
 
 .modal-close {
