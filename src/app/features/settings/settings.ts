@@ -41,6 +41,7 @@ export class Settings {
   protected copied = signal(false);
   protected activeSection = signal<SettingsSection>('password');
   protected savingEmailSettings = signal(false);
+  protected savingAlertSettings = signal(false);
   protected mailConnection = signal<MailConnectionStatus | null>(null);
   protected connecting = signal(false);
 
@@ -64,6 +65,11 @@ export class Settings {
     emailMessage: ['', Validators.required],
   });
 
+  protected alertForm = this.fb.nonNullable.group({
+    alertEmailEnabled: [true],
+    alertEmail: ['', [Validators.required, Validators.email]],
+  });
+
   protected offerForm = this.fb.nonNullable.group({
     backgroundColor: ['#FFFFFF', [Validators.required, Validators.pattern(HEX_COLOR)]],
     orientation: ['LANDSCAPE' as PdfOrientation, Validators.required],
@@ -79,6 +85,11 @@ export class Settings {
     }
     this.authService.getEmailSettings().subscribe((settings) => {
       this.emailForm.patchValue({ emailMessage: settings.emailMessage ?? '' });
+      this.alertForm.setValue({
+        alertEmailEnabled: settings.alertEmailEnabled,
+        alertEmail: settings.alertEmail ?? '',
+      });
+      this.alertForm.markAsPristine();
     });
     this.loadMailConnection();
     this.handleOAuthRedirect();
@@ -178,6 +189,34 @@ export class Settings {
       },
       error: () => this.savingEmailSettings.set(false),
     });
+  }
+
+  /** Wyłączone alerty nie potrzebują adresu — pole i tak zostaje, żeby po włączeniu wrócił poprzedni. */
+  canSaveAlertSettings(): boolean {
+    const value = this.alertForm.getRawValue();
+    return !this.savingAlertSettings() && (!value.alertEmailEnabled || this.alertForm.valid);
+  }
+
+  submitAlertSettings(): void {
+    if (!this.canSaveAlertSettings()) {
+      return;
+    }
+    const value = this.alertForm.getRawValue();
+    this.savingAlertSettings.set(true);
+    this.authService
+      .updateEmailSettings({ alertEmail: value.alertEmail.trim(), alertEmailEnabled: value.alertEmailEnabled })
+      .subscribe({
+        next: (settings) => {
+          this.savingAlertSettings.set(false);
+          this.alertForm.setValue({
+            alertEmailEnabled: settings.alertEmailEnabled,
+            alertEmail: settings.alertEmail ?? '',
+          });
+          this.alertForm.markAsPristine();
+          this.notifications.success('Ustawienia alertów zostały zapisane.');
+        },
+        error: () => this.savingAlertSettings.set(false),
+      });
   }
 
   async regenerateLink(): Promise<void> {

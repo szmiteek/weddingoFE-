@@ -36,10 +36,16 @@ export interface ChangePasswordCommand {
 
 export interface TenantEmailSettings {
   emailMessage: string | null;
+  /** Adres, na który pójdą alerty — backend podstawia adres konta, dopóki tenant nie wpisze własnego. */
+  alertEmail: string;
+  alertEmailEnabled: boolean;
 }
 
+/** Ustawienia siedzą w dwóch kafelkach, więc każdy zapisuje tylko swoje pola. */
 export interface TenantEmailSettingsUpdateCommand {
-  emailMessage: string;
+  emailMessage?: string;
+  alertEmail?: string;
+  alertEmailEnabled?: boolean;
 }
 
 export type MailConnectionState = 'ACTIVE' | 'REAUTH_REQUIRED' | 'DISCONNECTED';

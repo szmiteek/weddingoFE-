@@ -165,6 +165,49 @@
           </div>
         </div>
 
+        <div class="card" style="margin-bottom: 1.5rem;">
+          <div class="card__header">
+            <h2>E-mail do alertów</h2>
+          </div>
+
+          <form [formGroup]="alertForm" (ngSubmit)="submitAlertSettings()">
+            <div class="card__body">
+              <div class="field">
+                <label class="switch">
+                  <input type="checkbox" formControlName="alertEmailEnabled" />
+                  <span class="switch__track"></span>
+                  <span>Powiadamiaj mnie o nowych zapytaniach z formularza</span>
+                </label>
+              </div>
+
+              <div class="field" style="margin-bottom: 0;">
+                <label class="field__label">Adres do powiadomień</label>
+                <input
+                  class="input"
+                  type="email"
+                  formControlName="alertEmail"
+                  placeholder="np. biuro@twojafirma.pl"
+                  [class.is-invalid]="alertForm.controls.alertEmail.invalid && alertForm.controls.alertEmail.touched"
+                />
+                @if (alertForm.controls.alertEmail.invalid && alertForm.controls.alertEmail.touched) {
+                  <span class="field__error">Podaj poprawny adres e-mail.</span>
+                } @else {
+                  <span class="field__hint">
+                    Domyślnie adres, na który założono konto. Alerty wysyła system — nie wymagają podłączania
+                    skrzynki Google.
+                  </span>
+                }
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <button type="submit" class="btn btn-primary" [disabled]="!canSaveAlertSettings()">
+                {{ savingAlertSettings() ? 'Zapisywanie…' : 'Zapisz alerty' }}
+              </button>
+            </div>
+          </form>
+        </div>
+
         <div class="card">
           <div class="card__header">
             <h2>Treść wiadomości</h2>
