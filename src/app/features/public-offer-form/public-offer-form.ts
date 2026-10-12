@@ -1,3 +1,4 @@
+import { NgTemplateOutlet } from '@angular/common';
 import { Component, WritableSignal, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -27,7 +28,7 @@ const MAX_IMAGES = 5;
 
 @Component({
   selector: 'app-public-offer-form',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, NgTemplateOutlet],
   templateUrl: './public-offer-form.html',
   styleUrl: './public-offer-form.scss',
 })
@@ -61,6 +62,10 @@ export class PublicOfferForm {
     { key: 'guestsTableType', label: 'Typ stołów gości', options: this.tableTypeOptions, field: this.guestsTableTypeField },
     { key: 'flowersType', label: 'Rodzaj kwiatów', options: this.flowersTypeOptions, field: this.flowersTypeField },
   ];
+
+  /** Kwiaty stoją w formularzu po kompozycjach, reszta pytań z listą wyboru przed nimi — stąd podział. */
+  protected tableFields = this.singleSelectFields.filter((item) => item.key !== 'flowersType');
+  protected flowersField = this.singleSelectFields.find((item) => item.key === 'flowersType')!;
 
   private token = this.route.snapshot.paramMap.get('token') ?? '';
 

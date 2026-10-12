@@ -53,7 +53,7 @@
               }
             </div>
             <div class="field">
-              <label class="field__label">Telefon</label>
+              <label class="field__label">Numer telefonu</label>
               <input class="input" formControlName="phone" [class.is-invalid]="form.controls.phone.invalid && form.controls.phone.touched" required />
               @if (form.controls.phone.invalid && form.controls.phone.touched) {
                 <span class="field__error">To pole jest wymagane.</span>
@@ -63,7 +63,7 @@
 
           <div class="form-grid">
             <div class="field">
-              <label class="field__label">Miejsce</label>
+              <label class="field__label">Miejsce uroczystości (nazwa sali)</label>
               <input class="input" formControlName="venue" [class.is-invalid]="form.controls.venue.invalid && form.controls.venue.touched" required />
               @if (form.controls.venue.invalid && form.controls.venue.touched) {
                 <span class="field__error">To pole jest wymagane.</span>
@@ -123,32 +123,9 @@
             }
           </div>
 
-          <div class="field">
-            <label class="field__label">Poprawiny</label>
-            <div class="checklist">
-              <label class="checklist__item">
-                <input
-                  type="radio"
-                  name="afterWeddingParty"
-                  [checked]="afterWeddingParty() === true"
-                  (change)="afterWeddingParty.set(true)"
-                />
-                Tak
-              </label>
-              <label class="checklist__item">
-                <input
-                  type="radio"
-                  name="afterWeddingParty"
-                  [checked]="afterWeddingParty() === false"
-                  (change)="afterWeddingParty.set(false)"
-                />
-                Nie
-              </label>
-            </div>
-            @if (submitAttempted() && afterWeddingParty() === null) {
-              <span class="field__error">Wybierz jedną z opcji.</span>
-            }
-          </div>
+          @for (item of tableFields; track item.key) {
+            <ng-container [ngTemplateOutlet]="singleSelectField" [ngTemplateOutletContext]="{ $implicit: item }" />
+          }
 
           <div class="field">
             <label class="field__label">Rodzaj kompozycji</label>
@@ -169,45 +146,7 @@
             }
           </div>
 
-          @for (item of singleSelectFields; track item.key) {
-            <div class="field">
-              <label class="field__label">{{ item.label }}</label>
-              <div class="checklist">
-                @for (option of item.options; track option) {
-                  <label class="checklist__item">
-                    <input
-                      type="radio"
-                      [name]="item.key"
-                      [checked]="item.field.selected() === option"
-                      (change)="selectOption(item.field, option)"
-                    />
-                    {{ option }}
-                  </label>
-                }
-                <label class="checklist__item">
-                  <input
-                    type="radio"
-                    [name]="item.key"
-                    [checked]="item.field.selected() === OTHER"
-                    (change)="selectOption(item.field, OTHER)"
-                  />
-                  Inny
-                </label>
-              </div>
-              @if (item.field.selected() === OTHER) {
-                <input
-                  class="input"
-                  style="margin-top: .5rem;"
-                  [value]="item.field.custom()"
-                  (input)="setCustom(item.field, $any($event.target).value)"
-                  placeholder="Podaj jaki"
-                />
-              }
-              @if (isSingleSelectMissing(item)) {
-                <span class="field__error">Wybierz jedną z opcji.</span>
-              }
-            </div>
-          }
+          <ng-container [ngTemplateOutlet]="singleSelectField" [ngTemplateOutletContext]="{ $implicit: flowersField }" />
 
           <div class="field">
             <label class="field__label">Przystawki na stołach</label>
@@ -237,6 +176,74 @@
           </div>
 
           <div class="field">
+            <label class="field__label">Poprawiny</label>
+            <div class="checklist">
+              <label class="checklist__item">
+                <input
+                  type="radio"
+                  name="afterWeddingParty"
+                  [checked]="afterWeddingParty() === true"
+                  (change)="afterWeddingParty.set(true)"
+                />
+                Tak
+              </label>
+              <label class="checklist__item">
+                <input
+                  type="radio"
+                  name="afterWeddingParty"
+                  [checked]="afterWeddingParty() === false"
+                  (change)="afterWeddingParty.set(false)"
+                />
+                Nie
+              </label>
+            </div>
+            @if (submitAttempted() && afterWeddingParty() === null) {
+              <span class="field__error">Wybierz jedną z opcji.</span>
+            }
+          </div>
+
+          <!-- Wspólny wygląd pytań z listą wyboru i polem „Inny” — używany w dwóch miejscach formularza. -->
+          <ng-template #singleSelectField let-item>
+              <div class="field">
+                <label class="field__label">{{ item.label }}</label>
+                <div class="checklist">
+                  @for (option of item.options; track option) {
+                    <label class="checklist__item">
+                      <input
+                        type="radio"
+                        [name]="item.key"
+                        [checked]="item.field.selected() === option"
+                        (change)="selectOption(item.field, option)"
+                      />
+                      {{ option }}
+                    </label>
+                  }
+                  <label class="checklist__item">
+                    <input
+                      type="radio"
+                      [name]="item.key"
+                      [checked]="item.field.selected() === OTHER"
+                      (change)="selectOption(item.field, OTHER)"
+                    />
+                    Inny
+                  </label>
+                </div>
+                @if (item.field.selected() === OTHER) {
+                  <input
+                    class="input"
+                    style="margin-top: .5rem;"
+                    [value]="item.field.custom()"
+                    (input)="setCustom(item.field, $any($event.target).value)"
+                    placeholder="Podaj jaki"
+                  />
+                }
+                @if (isSingleSelectMissing(item)) {
+                  <span class="field__error">Wybierz jedną z opcji.</span>
+                }
+              </div>
+          </ng-template>
+
+          <div class="field">
             <label class="field__label">Kolorystyka</label>
             <input class="input" formControlName="colors" [class.is-invalid]="form.controls.colors.invalid && form.controls.colors.touched" required />
             @if (form.controls.colors.invalid && form.controls.colors.touched) {
@@ -245,7 +252,7 @@
           </div>
 
           <div class="field">
-            <label class="field__label">Opis / dodatkowe informacje</label>
+            <label class="field__label">Opis / dodatkowe informacje (wymień elementy, które mają znaleźć się w Twojej dekoracji np. ścianka za stołem, świeczniki, serwetki, podtalerze)</label>
             <textarea class="textarea" formControlName="description" [class.is-invalid]="form.controls.description.invalid && form.controls.description.touched" required></textarea>
             @if (form.controls.description.invalid && form.controls.description.touched) {
               <span class="field__error">To pole jest wymagane.</span>
